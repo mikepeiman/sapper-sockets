@@ -23,10 +23,18 @@ const io = serverSocket(server);
 // https://www.youtube.com/watch?v=KNqVpESuyQo&list=PL4cUxeGkcC9i4V-_ZVwLmOusj8YAUhj_9&index=4
 
 io.on("connection", socket => {
-  socket.join('chatlobby')
+  // socket.join('chatlobby')
   console.log(`serverSockets: made socket connection `, socket.id);
   socket.on('new message', msg => {
-    console.log(`Server received new message from client: ${msg.user} ${msg.body}`)
+    console.log(`Server received new message  ${msg.body} from client user ${msg.user} with socket id ${socket.id}`)
     io.sockets.emit('chat', msg)
+  })
+
+  socket.on('typing', username => {
+    socket.emit('typing', username)
+  })
+
+  socket.on('message', message => {
+    socket.broadcast.emit('message', message)
   })
 });

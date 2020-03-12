@@ -1,9 +1,32 @@
 <script>
+  let currentMessage = "",
+    messages = [];
   // import * as chat from './../chat.js'
+  import { fade } from "svelte/transition";
+  import io from "socket.io-client";
+  let socket = io();
+
   function submitMsg() {
-    let msg = document.querySelector('#message').value
-    let user = document.querySelector('#username').value
-    console.log(`submitMsg function inside about.svelte ${user}::: ${msg}`);
+    // let msg = document.querySelector('#message').value
+    let user = document.querySelector("#username").value;
+    let thisMsg = {
+      username: user,
+      body: currentMessage
+    }
+    messages = [...messages, thisMsg];
+    socket.emit("message", currentMessage);
+    console.log(
+      `submitMsg function inside about.svelte ${user}::: ${currentMessage}`
+    );
+  }
+
+  socket.on("message", message => {
+    messages = [...messages, message];
+    console.log(`client received a message broadcast, ${message}`);
+  });
+
+  function emitUserDisconnect() {
+    socket.emit('disconnected')
   }
 </script>
 
@@ -31,12 +54,19 @@
     border: 3px solid rgba(50, 10, 110, 0.15);
     margin-bottom: 1rem;
   }
+
+  :global(.feedback) {
+    color: greenyellow;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.25);
+    transition: all 1s;
+  }
 </style>
 
 <svelte:head>
   <title>About</title>
 </svelte:head>
-
+<svelte:window on:unload={emitUserDisconnect}
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
   <space class="medium" />
   <!-- <div class="padded content"> -->
@@ -82,17 +112,18 @@
     <r-cell span="3-8" span-s="row">
       <div class="chat-window-group">
         <div id="chat-window">
-          <div id="output" />
+          <div id="feedback" />
+          <ul id="messages">
+            {#each messages as message}
+              <li transition:fade>{message.username}: {message.body}</li>
+            {/each}
+          </ul>
         </div>
-        <input type="text" id="message" placeholder="What's up?" />
-        <!-- <div class="form-ext-control form-ext-checkbox">
-                      <input id="check1" class="form-ext-input" type="checkbox" />
-                      <label class="form-ext-label" for="check1">
-                        Send me a copy.
-                      </label>
-                    </div>
-  
-                    <space /> -->
+        <input
+          type="text"
+          id="message"
+          bind:value={currentMessage}
+          placeholder="What's up?" />
 
       </div>
       <div class="btn-group u-pull-right">
