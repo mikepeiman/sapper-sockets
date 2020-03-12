@@ -6,27 +6,43 @@
   import io from "socket.io-client";
   let socket = io();
 
+  $: user = "";
+
   function submitMsg() {
     // let msg = document.querySelector('#message').value
-    let user = document.querySelector("#username").value;
+
     let thisMsg = {
       username: user,
       body: currentMessage
-    }
+    };
     messages = [...messages, thisMsg];
-    socket.emit("message", currentMessage);
+    socket.emit("message", thisMsg);
     console.log(
-      `submitMsg function inside about.svelte ${user}::: ${currentMessage}`
+      `submitMsg function inside about.svelte ${socket.id} ||| ${user}::: ${currentMessage}`
     );
   }
 
   socket.on("message", message => {
     messages = [...messages, message];
-    console.log(`client received a message broadcast, ${message}`);
+    console.log(
+      `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
+    );
+    let feedback = document.querySelector("#feedback");
+    feedback.innerHTML = ``;
   });
 
+  socket.on("typing", username => {
+    console.log(`receiving a typing emission... logged from about.svelte`);
+    let feedback = document.querySelector("#feedback");
+    feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
+  });
+
+  function typing() {
+    socket.emit("typing", user);
+  }
+
   function emitUserDisconnect() {
-    socket.emit('disconnected')
+    socket.emit("disconnected");
   }
 </script>
 
@@ -66,7 +82,8 @@
 <svelte:head>
   <title>About</title>
 </svelte:head>
-<svelte:window on:unload={emitUserDisconnect}
+<svelte:window on:unload={emitUserDisconnect} />
+
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
   <space class="medium" />
   <!-- <div class="padded content"> -->
@@ -92,7 +109,8 @@
                       id="username"
                       type="text"
                       class="form-group-input"
-                      placeholder="Enter your name" />
+                      placeholder="Enter your name"
+                      bind:value={user} />
                   </div>
                   <div class="divider" />
                   <p class="u-text-center">Enter a name and chat away!</p>
@@ -123,6 +141,7 @@
           type="text"
           id="message"
           bind:value={currentMessage}
+          on:keypress={typing}
           placeholder="What's up?" />
 
       </div>
