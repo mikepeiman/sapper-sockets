@@ -77,6 +77,23 @@
     background: rgba(0, 0, 0, 0.25);
     transition: all 1s;
   }
+
+  :global(.list-item) {
+    display: flex;
+
+    list-style: none;
+  }
+  .list-item-username,
+  .list-item-message {
+    background: rgba(5, 25, 15, 0.1);
+    border-radius: 3px;
+    padding: 3px 12px;
+    margin: 3px;
+  }
+  .list-item-username {
+    background: rgba(5, 25, 15, 0.2);
+    width: 10ch;
+  }
 </style>
 
 <svelte:head>
@@ -133,7 +150,10 @@
           <div id="feedback" />
           <ul id="messages">
             {#each messages as message}
-              <li transition:fade>{message.username}: {message.body}</li>
+              <li class="list-item" transition:fade>
+                <div class="list-item-username">{message.username}:</div>
+                <div class="list-item-message">{message.body}</div>
+              </li>
             {/each}
           </ul>
         </div>
