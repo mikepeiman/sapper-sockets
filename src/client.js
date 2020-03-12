@@ -1,4 +1,5 @@
 import * as sapper from '@sapper/app';
+import * as chat from './chat.js'
 // import clientSocket from 'socket.io-client'
 
 console.log(`window.origin now: ${window.origin}`)

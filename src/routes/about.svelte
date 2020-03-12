@@ -1,3 +1,12 @@
+<script>
+  // import * as chat from './../chat.js'
+  function submitMsg() {
+    let msg = document.querySelector('#message').value
+    let user = document.querySelector('#username').value
+    console.log(`submitMsg function inside about.svelte ${user}::: ${msg}`);
+  }
+</script>
+
 <style>
   .hero-body {
     align-items: flex-start;
@@ -19,7 +28,7 @@
     border-radius: 3px;
     height: 50vh;
     width: 100%;
-    border: 3px solid rgba(50,10,110,.15);
+    border: 3px solid rgba(50, 10, 110, 0.15);
     margin-bottom: 1rem;
   }
 </style>
@@ -28,7 +37,7 @@
   <title>About</title>
 </svelte:head>
 
-<form class="frame" method="post">
+<form class="frame" method="post" on:submit|preventDefault={submitMsg}>
   <space class="medium" />
   <!-- <div class="padded content"> -->
   <h1 class="u-text-center u-font-alt">Chat</h1>
@@ -50,6 +59,7 @@
                       </span>
                     </label>
                     <input
+                      id="username"
                       type="text"
                       class="form-group-input"
                       placeholder="Enter your name" />
@@ -90,5 +100,4 @@
       </div>
     </r-cell>
   </r-grid>
-
 </form>
