@@ -1,27 +1,48 @@
+<style>
+  .hero-body {
+    align-items: flex-start;
+    width: 100%;
+    padding: 0;
+  }
+
+  .frame {
+    width: 100%;
+    height: 80vh;
+  }
+
+  textarea {
+    min-height: 50vh;
+  }
+
+  #chat-window {
+    /* background: rgba(25,5,55,0.1); */
+    border-radius: 3px;
+    height: 50vh;
+    width: 100%;
+    border: 3px solid rgba(50,10,110,.15);
+    margin-bottom: 1rem;
+  }
+</style>
+
 <svelte:head>
   <title>About</title>
 </svelte:head>
 
-<div class="content">
+<form class="frame" method="post">
+  <space class="medium" />
+  <!-- <div class="padded content"> -->
+  <h1 class="u-text-center u-font-alt">Chat</h1>
+  <r-grid columns="8">
+    <r-cell span="1-2" class="hero fullscreen">
+      <div class="hero-body">
+        <!-- <div class="content"> -->
 
-  <div class="hero fullscreen">
-    <div class="hero-body">
-      <div class="content">
-        <form class="frame u-no-padding" method="post">
-          <div class="frame__body u-no-padding">
-            <div class="row u-no-padding level fill-height">
-              <div class="col">
-                <space class="x-large" />
-                <div class="padded content">
-                  <h1 class="u-text-center u-font-alt">Contact Us</h1>
-                  <div class="divider" />
-                  <p class="u-text-center">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua.
-                  </p>
-                  <div class="divider" />
+        <div class="frame__body u-no-padding">
+          <div class="row u-no-padding level fill-height">
+            <div class="col">
 
+              <r-grid columns="8">
+                <r-cell span="row" span-s="row">
                   <div class="form-group">
                     <label class="form-group-label">
                       <span class="icon">
@@ -33,71 +54,41 @@
                       class="form-group-input"
                       placeholder="Enter your name" />
                   </div>
+                  <div class="divider" />
+                  <p class="u-text-center">Enter a name and chat away!</p>
+                  <div class="divider" />
+                </r-cell>
 
-                  <div class="form-group">
-                    <label class="form-group-label">
-                      <span class="icon">
-                        <i class="fa-wrapper far fa-envelope" />
-                      </span>
-                    </label>
-                    <input
-                      type="email"
-                      class="form-group-input"
-                      placeholder="Enter your email" />
-                  </div>
-
-                  <div class="form-section section-inline">
-                    <div class="section-body">
-                      <div class="form-group col-6">
-                        <label class="form-group-label">
-                          <span class="icon">
-                            <i class="fa-wrapper far fa-calendar" />
-                          </span>
-                        </label>
-                        <input
-                          type="date"
-                          class="form-group-input"
-                          placeholder="Enter your birthday (or not)" />
-                      </div>
-                      <div class="form-group col-6">
-                        <label class="form-group-label">
-                          <span class="icon">
-                            <i class="fa-wrapper far fa-calendar" />
-                          </span>
-                        </label>
-                        <select
-                          class="select form-group-input"
-                          placeholder="Choose one">
-                          <option>Bug Report</option>
-                          <option>Feature Request</option>
-                          <option>Other</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <textarea placeholder="Tell us what's wrong" />
-
-                  <div class="form-ext-control form-ext-checkbox">
-                    <input id="check1" class="form-ext-input" type="checkbox" />
-                    <label class="form-ext-label" for="check1">
-                      Send me a copy.
-                    </label>
-                  </div>
-
-                  <space />
-
-                  <div class="btn-group u-pull-right">
-                    <button class="btn-info">Send</button>
-                  </div>
-
-                </div>
-                <space class="x-large" />
-              </div>
+              </r-grid>
             </div>
+            <space class="x-large" />
           </div>
-        </form>
+        </div>
+        <!-- </div> -->
+
       </div>
-    </div>
-  </div>
-</div>
+      <!-- </div> -->
+    </r-cell>
+    <r-cell span="3-8" span-s="row">
+      <div class="chat-window-group">
+        <div id="chat-window">
+          <div id="output" />
+        </div>
+        <input type="text" id="message" placeholder="What's up?" />
+        <!-- <div class="form-ext-control form-ext-checkbox">
+                      <input id="check1" class="form-ext-input" type="checkbox" />
+                      <label class="form-ext-label" for="check1">
+                        Send me a copy.
+                      </label>
+                    </div>
+  
+                    <space /> -->
+
+      </div>
+      <div class="btn-group u-pull-right">
+        <button class="btn-info" id="send-message">Send</button>
+      </div>
+    </r-cell>
+  </r-grid>
+
+</form>
