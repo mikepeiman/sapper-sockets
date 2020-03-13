@@ -82,19 +82,35 @@
   .frame {
     width: 100%;
     height: 80vh;
+    box-shadow: none;
   }
 
   textarea {
     min-height: 50vh;
   }
 
-  #chat-window {
-    /* background: rgba(25,5,55,0.1); */
+  .chat-element {
+    background: white;
+    box-shadow: 1px 1px 3px rgba(50, 10, 110, 0.25);
     border-radius: 3px;
+  }
+
+  #chat-window {
     height: 50vh;
     width: 100%;
-    border: 3px solid rgba(50, 10, 110, 0.15);
     margin-bottom: 1rem;
+  }
+  #message {
+    border-radius: 3px 3px 0 0;
+  }
+  #send-message {
+    border-radius: 0 0 3px 3px;
+  }
+  .btn-group {
+    width: 100%;
+    & button:last-child:not(:first-child) {
+      margin-left: 0;
+    }
   }
 
   :global(.feedback) {
@@ -106,7 +122,6 @@
 
   :global(.list-item) {
     display: flex;
-
     list-style: none;
   }
   .list-item-username,
@@ -128,7 +143,6 @@
 <svelte:window on:unload={emitUserDisconnect} />
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
-  <space class="small" />
   <h1 class="u-text-center u-font-alt">Chat</h1>
   <div class="hero fullscreen">
     <div class="chat-container">
@@ -139,17 +153,22 @@
             <i class="fa-wrapper far fa-user" />
           </span>
         </label>
+        <label class="form-group-label">
+          <span class="icon">
+            <i class="fa-wrapper fas fa-palette" />
+          </span>
+        </label>
         <input
           id="username"
           type="text"
-          class="form-group-input"
+          class="form-group-input chat-element"
           placeholder="Enter your name"
           bind:value={user} />
       </div>
 
     </div>
     <div class="chat-window-group">
-      <div id="chat-window">
+      <div class="chat-element" id="chat-window">
         <div id="feedback" />
         <ul id="messages">
           {#each messages as message}
@@ -160,16 +179,17 @@
           {/each}
         </ul>
       </div>
-      <input
-        type="text"
-        id="message"
-        bind:value={currentMessage}
-        on:keypress={typing}
-        placeholder="What's up?" />
 
-    </div>
-    <div class="btn-group u-pull-right">
-      <button class="btn-info" id="send-message">Send</button>
+      <div class="btn-group chat-element">
+        <input
+          type="text"
+          id="message"
+          bind:value={currentMessage}
+          on:keypress={typing}
+          placeholder="What's up?" />
+
+        <button class="btn-info" id="send-message">Send</button>
+      </div>
     </div>
   </div>
 </form>
