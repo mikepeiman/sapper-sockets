@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@joeattardi/emoji-button": "^2.12.1",
+    "@simonwep/pickr": "^1.5.1",
     "autoprefixer": "^9.7.4",
     "cirrus-ui": "^0.5.5",
     "compression": "^1.7.1",
