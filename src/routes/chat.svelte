@@ -27,7 +27,7 @@
 
   $: document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
   $: document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
-  
+
   emojiPicked = "...";
   currentColor = "rgba(255,25,255,0.35)";
   socket.on("message", message => {
@@ -334,7 +334,9 @@
   }
   .list-item-username {
     background: rgba(5, 25, 15, 0.2);
-    width: 10ch;
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
   }
 </style>
 
