@@ -5,10 +5,11 @@
   import { fade } from "svelte/transition";
   import { onMount } from "svelte";
   import io from "socket.io-client";
+  import generate from "project-name-generator";
   let socket = io();
 
   $: user = "";
-
+  let generatedUsername, placeholderName;
   onMount(() => {
     // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
     // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
@@ -20,12 +21,9 @@
     document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
     let sapper = document.querySelector("#sapper");
     sapper.classList.toggle("transition");
-    setTimeout(() => {
-      // sapper.classList.toggle("transition");
-    }, 500);
-
-    // document.querySelector("#sapper").style.setProperty(`--custom-page-bg1`, bg);
-    // document.querySelector("#sapper").style.setProperty(`--custom-page-bg1`, bg1);
+    user = generatedUsername = generate({ number: true }).dashed;
+    console.log(`Chat onMount, generated username ${generatedUsername}`);
+    placeholderNameInit();
   });
 
   function submitMsg() {
@@ -64,6 +62,27 @@
   function emitUserDisconnect() {
     socket.emit("disconnected");
   }
+
+  function placeholderNameInit() {
+    // generatedUsername = generate({ number: true }).dashed;
+    console.log(`placeholderName: user ${user} generated ${generatedUsername}`);
+    if (user == generatedUsername) {
+      console.log(
+        `placeholderName: user ${user} MATCHES generated ${generatedUsername}`
+      );
+      return placeholderName = `Enter your name (or use random: ${generatedUsername})`;
+      console.log(`placeholderName should be ${placeholderName}`);
+    } else {
+      return placeholderName = user;
+    }
+  }
+  function onFocus(e) {
+    e.target.select()
+  }
+  function onBlur(e) {
+    e.target.value.length > 1 ? user = e.target.value : user = generatedUsername
+    console.log(`onBlur e.target.value.length ${e.target.value.length} e.target.value ${e.target.value} generatedUsername ${generatedUsername}`)
+  }
 </script>
 
 <style lang="scss">
@@ -77,6 +96,8 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    max-width: 60em;
+    align-self: center;
   }
 
   .frame {
@@ -91,13 +112,23 @@
 
   .chat-element {
     background: white;
-    box-shadow: 1px 1px 3px rgba(50, 10, 110, 0.25);
     border-radius: 3px;
+    &:active,
+    &:focus {
+      box-shadow: 1px 1px 3px rgba(50, 10, 110, 0.25);
+    }
+  }
+
+  .icon {
+    &.checkmark {
+      color: rgba(0, 255, 55, 1);
+    }
   }
 
   #chat-window {
     height: 50vh;
     width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
   }
   #message {
@@ -146,24 +177,34 @@
   <h1 class="u-text-center u-font-alt">Chat</h1>
   <div class="hero fullscreen">
     <div class="chat-container">
-
-      <div class="form-group">
+      <h6>
+        Your username:
+        <span class="username">{user}</span>
+      </h6>
+      <div class="form-group chat-element">
         <label class="form-group-label">
-          <span class="icon">
+          <span class="icon user">
             <i class="fa-wrapper far fa-user" />
           </span>
         </label>
         <label class="form-group-label">
-          <span class="icon">
+          <span class="icon palette">
             <i class="fa-wrapper fas fa-palette" />
           </span>
         </label>
         <input
           id="username"
           type="text"
-          class="form-group-input chat-element"
-          placeholder="Enter your name"
+          class="form-group-input"
+          placeholder={placeholderName}
+          on:focus={onFocus}
+          on:blur={onBlur}
           bind:value={user} />
+        <label class="form-group-label">
+          <span class="icon checkmark">
+            <i class="fa-wrapper fas fa-check" />
+          </span>
+        </label>
       </div>
 
     </div>
