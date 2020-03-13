@@ -3,10 +3,17 @@
     messages = [];
   // import * as chat from './../chat.js'
   import { fade } from "svelte/transition";
+  import { onMount } from "svelte";
   import io from "socket.io-client";
   let socket = io();
 
   $: user = "";
+
+  onMount(() => {
+    let bg = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
+    // document.documentElement.style.setProperty(`--custom-page-bg`, bg)
+    document.querySelector("#sapper").style.setProperty(`--custom-page-bg`, bg);
+  });
 
   function submitMsg() {
     // let msg = document.querySelector('#message').value
@@ -53,6 +60,12 @@
     padding: 0;
   }
 
+  .hero.fullscreen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
   .frame {
     width: 100%;
     height: 80vh;
@@ -72,7 +85,7 @@
   }
 
   :global(.feedback) {
-    color: greenyellow;
+    color: rgb(47, 255, 203);
     padding: 0.5rem;
     background: rgba(0, 0, 0, 0.25);
     transition: all 1s;
@@ -102,72 +115,48 @@
 <svelte:window on:unload={emitUserDisconnect} />
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
-  <space class="medium" />
-  <!-- <div class="padded content"> -->
+  <space class="small" />
   <h1 class="u-text-center u-font-alt">Chat</h1>
-  <r-grid columns="8">
-    <r-cell span="1-2" class="hero fullscreen">
-      <div class="hero-body">
-        <!-- <div class="content"> -->
+  <div class="hero fullscreen">
+    <div class="chat-container">
 
-        <div class="frame__body u-no-padding">
-          <div class="row u-no-padding level fill-height">
-            <div class="col">
-
-              <r-grid columns="8">
-                <r-cell span="row" span-s="row">
-                  <div class="form-group">
-                    <label class="form-group-label">
-                      <span class="icon">
-                        <i class="fa-wrapper far fa-user" />
-                      </span>
-                    </label>
-                    <input
-                      id="username"
-                      type="text"
-                      class="form-group-input"
-                      placeholder="Enter your name"
-                      bind:value={user} />
-                  </div>
-                  <div class="divider" />
-                  <p class="u-text-center">Enter a name and chat away!</p>
-                  <div class="divider" />
-                </r-cell>
-
-              </r-grid>
-            </div>
-            <space class="x-large" />
-          </div>
-        </div>
-        <!-- </div> -->
-
-      </div>
-      <!-- </div> -->
-    </r-cell>
-    <r-cell span="3-8" span-s="row">
-      <div class="chat-window-group">
-        <div id="chat-window">
-          <div id="feedback" />
-          <ul id="messages">
-            {#each messages as message}
-              <li class="list-item" transition:fade>
-                <div class="list-item-username">{message.username}:</div>
-                <div class="list-item-message">{message.body}</div>
-              </li>
-            {/each}
-          </ul>
-        </div>
+      <div class="form-group">
+        <label class="form-group-label">
+          <span class="icon">
+            <i class="fa-wrapper far fa-user" />
+          </span>
+        </label>
         <input
+          id="username"
           type="text"
-          id="message"
-          bind:value={currentMessage}
-          on:keypress={typing}
-          placeholder="What's up?" />
+          class="form-group-input"
+          placeholder="Enter your name"
+          bind:value={user} />
+      </div>
 
+    </div>
+    <div class="chat-window-group">
+      <div id="chat-window">
+        <div id="feedback" />
+        <ul id="messages">
+          {#each messages as message}
+            <li class="list-item" transition:fade>
+              <div class="list-item-username">{message.username}:</div>
+              <div class="list-item-message">{message.body}</div>
+            </li>
+          {/each}
+        </ul>
       </div>
-      <div class="btn-group u-pull-right">
-        <button class="btn-info" id="send-message">Send</button>
-      </div>
-    </r-cell>
-  </r-grid>
+      <input
+        type="text"
+        id="message"
+        bind:value={currentMessage}
+        on:keypress={typing}
+        placeholder="What's up?" />
+
+    </div>
+    <div class="btn-group u-pull-right">
+      <button class="btn-info" id="send-message">Send</button>
+    </div>
+  </div>
 </form>

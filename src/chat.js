@@ -1,35 +1,45 @@
-const clientSocket = io.connect(window.origin);
-// let clientSocket = io();
-console.log(`chat.js loaded, window.origin: `, window.origin);
-console.log(`chat.js loaded, clientSocket.id: `, clientSocket.id);
-let output = document.querySelector("#output"),
-  feedback = document.querySelector("#feedback"),
-  username = document.querySelector("#username"),
-  submit = document.querySelector("#send-message"),
-  message = document.querySelector("#message");
+import { storeUsernames } from './stores.js'
 
-// emit event
-submit.addEventListener("click", () => {
-  let msg = {
-    body: message.value,
-    user: username.value
-  };
-  clientSocket.emit("new message", msg);
+
+// import * as chat from './../chat.js'
+import { fade } from "svelte/transition";
+import io from "socket.io-client";
+let socket = io();
+
+
+function submitMsg() {
+// let msg = document.querySelector('#message').value
+
+let thisMsg = {
+  username: user,
+  body: currentMessage
+};
+messages = [...messages, thisMsg];
+socket.emit("message", thisMsg);
+console.log(
+  `submitMsg function inside about.svelte ${socket.id} ||| ${user}::: ${currentMessage}`
+);
+}
+
+socket.on("message", message => {
+messages = [...messages, message];
+console.log(
+  `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
+);
+let feedback = document.querySelector("#feedback");
+feedback.innerHTML = ``;
 });
 
-feedback.addEventListener("keypress", user => {
-  clientSocket.emit("typing", user);
-});
-// listen for events
-
-clientSocket.on("chat", msg => {
-  console.log(
-    `client ${clientSocket.id} has received a chat msg of ${msg.body} from ${msg.user} with client socket id ${clientSocket.id}`
-  );
-  output.innerHTML += `<p><strong>${msg.user}:</strong> ${msg.body}</p>`;
+socket.on("typing", username => {
+console.log(`receiving a typing emission... logged from about.svelte`);
+let feedback = document.querySelector("#feedback");
+feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
 });
 
-clientSocket.on("typing", user => {
-  console.log(`typing message from ${user}`);
-  feedback.innerHTML = `<p class="feedback">${user} is typing...</p>`;
-});
+function typing() {
+socket.emit("typing", user);
+}
+
+function emitUserDisconnect() {
+socket.emit("disconnected");
+}
