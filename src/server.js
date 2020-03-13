@@ -45,28 +45,28 @@ io.on("connection", socket => {
   });
 
   socket.on("avatar init", () => {
-    (async () => {
-      try {
-        const res = await avatarPicker.twitter.getAvatar('mikepeiman');
-        console.log(`inside server socket.on avatar init, res `, res)
-        const b64 = new Buffer.from(res).toString('base64')
-        const mimeType = 'image/png'
-        const src = `data:${mimeType};base64,${b64}`
-        socket.emit('avatar returned', src)
-      } catch (e) {
-        // Deal with the fact the chain failed
-        console.log(`inside server socket.on avatar init, failed `, e)
-      }
-  })();
-    (async () => {
-      try {
-        const res = await avatarPicker.facebook.getAvatarUrl("mikepeiman");
-        console.log(`inside server socket.on avatar init, res `, res)
-      } catch (e) {
-        // Deal with the fact the chain failed
-        console.log(`inside server socket.on avatar init, failed `, e)
-      }
-    })();
+  //   (async () => {
+  //     try {
+  //       const res = await avatarPicker.twitter.getAvatar('mikepeiman');
+  //       console.log(`inside server socket.on avatar init, res `, res)
+  //       const b64 = new Buffer.from(res).toString('base64')
+  //       const mimeType = 'image/png'
+  //       const src = `data:${mimeType};base64,${b64}`
+  //       socket.emit('avatar returned', src)
+  //     } catch (e) {
+  //       // Deal with the fact the chain failed
+  //       console.log(`inside server socket.on avatar init, failed `, e)
+  //     }
+  // })();
+  //   (async () => {
+  //     try {
+  //       const res = await avatarPicker.facebook.getAvatarUrl("mikepeiman");
+  //       console.log(`inside server socket.on avatar init, res `, res)
+  //     } catch (e) {
+  //       // Deal with the fact the chain failed
+  //       console.log(`inside server socket.on avatar init, failed `, e)
+  //     }
+  //   })();
 
     // socket.emit("avatar returned", true);
   });

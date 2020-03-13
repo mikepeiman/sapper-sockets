@@ -12,9 +12,11 @@
     "test": "run-p --race dev cy:run"
   },
   "dependencies": {
+    "@joeattardi/emoji-button": "^2.12.1",
     "autoprefixer": "^9.7.4",
     "cirrus-ui": "^0.5.5",
     "compression": "^1.7.1",
+    "emojis-list": "^3.0.0",
     "network-avatar-picker": "^1.4.0",
     "node-sass": "^4.13.1",
     "normalize.css": "^8.0.1",
@@ -23,6 +25,7 @@
     "sirv": "^0.4.0",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
+    "svelte-emoji-selector": "^1.0.1",
     "svelte-preprocess": "^3.4.0"
   },
   "devDependencies": {

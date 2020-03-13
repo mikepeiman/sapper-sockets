@@ -6,13 +6,22 @@
   import { onMount } from "svelte";
   import io from "socket.io-client";
   import generate from "project-name-generator";
-
+  import EmojiButton from "@joeattardi/emoji-button";
+import emojis from 'emojis-list'
   let socket = io();
 
   $: user = "";
-  let generatedUsername, placeholderName, avatar, avatarUrl, avatarSrc;
+  let generatedUsername,
+    placeholderName,
+    avatar,
+    avatarUrl,
+    avatarSrc,
+    emojiPicked,
+    emojiPicker;
 
-    socket.on("message", message => {
+
+
+  socket.on("message", message => {
     messages = [...messages, message];
     console.log(
       `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
@@ -27,12 +36,16 @@
     feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
   });
 
-socket.on('avatar returned', data => {
-  console.log(`on avatar returned to client, data `, data)
-  avatarSrc = data
-})
+  socket.on("avatar returned", data => {
+    console.log(`on avatar returned to client, data `, data);
+    avatarSrc = data;
+  });
 
   onMount(() => {
+    let rand = getRandomInt(0,emojis.length)
+    console.log(`random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`)
+        emojiPicked = emojis[rand]
+    emojiPicker = new EmojiButton({ zIndex: 99 });
     // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
     // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
 
@@ -46,8 +59,14 @@ socket.on('avatar returned', data => {
     user = generatedUsername = generate({ number: true }).dashed;
     console.log(`Chat onMount, generated username ${generatedUsername}`);
     placeholderNameInit();
-    avatarInit()
+    avatarInit();
   });
+
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
   function submitMsg() {
     // let msg = document.querySelector('#message').value
@@ -62,8 +81,6 @@ socket.on('avatar returned', data => {
       `submitMsg function inside about.svelte ${socket.id} ||| ${user}::: ${currentMessage}`
     );
   }
-
-
 
   function typing() {
     socket.emit("typing", user);
@@ -87,9 +104,9 @@ socket.on('avatar returned', data => {
     }
   }
 
-function avatarInit() {
-  socket.emit('avatar init', true)
-}
+  function avatarInit() {
+    socket.emit("avatar init", true);
+  }
 
   function onFocus(e) {
     e.target.select();
@@ -101,6 +118,16 @@ function avatarInit() {
     console.log(
       `onBlur e.target.value.length ${e.target.value.length} e.target.value ${e.target.value} generatedUsername ${generatedUsername}`
     );
+  }
+
+  function togglePicker(e) {
+    console.log(`toggle emoji picker e.target `, e.target);
+    let target = document.querySelector("form.frame");
+    emojiPicker.togglePicker(e.target);
+    emojiPicker.on("emoji", emoji => {
+      console.log(`returned emoji ${emoji}`);
+      emojiPicked = emoji
+    });
   }
 </script>
 
@@ -119,6 +146,10 @@ function avatarInit() {
     align-self: center;
   }
 
+  .form-group-label {
+    position: relative;
+  }
+
   .frame {
     width: 100%;
     height: 80vh;
@@ -128,7 +159,15 @@ function avatarInit() {
   textarea {
     min-height: 50vh;
   }
-
+  .chat-container {
+    & .user-info {
+      display: flex;
+      align-items: center;
+      & h6 {
+        margin-left: 2rem;
+      }
+    }
+  }
   .chat-element {
     background: white;
     border-radius: 3px;
@@ -196,15 +235,18 @@ function avatarInit() {
   <h1 class="u-text-center u-font-alt">Chat</h1>
   <div class="hero fullscreen">
     <div class="chat-container">
-    <img src={avatarSrc} width="50" height="50" />
-      <h6>
-        Your username:
-        <span class="username">{user}</span>
-      </h6>
+      <div class="user-info">
+        <img src={avatarSrc} width="50" height="50" />
+        <h6>
+          Your username:
+          <span class="username">{user}</span>
+        </h6>
+      </div>
       <div class="form-group chat-element">
-        <label class="form-group-label">
+        <label class="form-group-label" on:click={togglePicker}>
           <span class="icon user">
             <i class="fa-wrapper far fa-user" />
+            {emojiPicked}
           </span>
         </label>
         <label class="form-group-label">
