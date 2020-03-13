@@ -6,10 +6,32 @@
   import { onMount } from "svelte";
   import io from "socket.io-client";
   import generate from "project-name-generator";
+
   let socket = io();
 
   $: user = "";
-  let generatedUsername, placeholderName;
+  let generatedUsername, placeholderName, avatar, avatarUrl, avatarSrc;
+
+    socket.on("message", message => {
+    messages = [...messages, message];
+    console.log(
+      `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
+    );
+    let feedback = document.querySelector("#feedback");
+    feedback.innerHTML = ``;
+  });
+
+  socket.on("typing", username => {
+    console.log(`receiving a typing emission... logged from about.svelte`);
+    let feedback = document.querySelector("#feedback");
+    feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
+  });
+
+socket.on('avatar returned', data => {
+  console.log(`on avatar returned to client, data `, data)
+  avatarSrc = data
+})
+
   onMount(() => {
     // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
     // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
@@ -24,6 +46,7 @@
     user = generatedUsername = generate({ number: true }).dashed;
     console.log(`Chat onMount, generated username ${generatedUsername}`);
     placeholderNameInit();
+    avatarInit()
   });
 
   function submitMsg() {
@@ -40,20 +63,7 @@
     );
   }
 
-  socket.on("message", message => {
-    messages = [...messages, message];
-    console.log(
-      `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
-    );
-    let feedback = document.querySelector("#feedback");
-    feedback.innerHTML = ``;
-  });
 
-  socket.on("typing", username => {
-    console.log(`receiving a typing emission... logged from about.svelte`);
-    let feedback = document.querySelector("#feedback");
-    feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
-  });
 
   function typing() {
     socket.emit("typing", user);
@@ -70,18 +80,27 @@
       console.log(
         `placeholderName: user ${user} MATCHES generated ${generatedUsername}`
       );
-      return placeholderName = `Enter your name (or use random: ${generatedUsername})`;
+      return (placeholderName = `Enter your name (or use random: ${generatedUsername})`);
       console.log(`placeholderName should be ${placeholderName}`);
     } else {
-      return placeholderName = user;
+      return (placeholderName = user);
     }
   }
+
+function avatarInit() {
+  socket.emit('avatar init', true)
+}
+
   function onFocus(e) {
-    e.target.select()
+    e.target.select();
   }
   function onBlur(e) {
-    e.target.value.length > 1 ? user = e.target.value : user = generatedUsername
-    console.log(`onBlur e.target.value.length ${e.target.value.length} e.target.value ${e.target.value} generatedUsername ${generatedUsername}`)
+    e.target.value.length > 1
+      ? (user = e.target.value)
+      : (user = generatedUsername);
+    console.log(
+      `onBlur e.target.value.length ${e.target.value.length} e.target.value ${e.target.value} generatedUsername ${generatedUsername}`
+    );
   }
 </script>
 
@@ -177,6 +196,7 @@
   <h1 class="u-text-center u-font-alt">Chat</h1>
   <div class="hero fullscreen">
     <div class="chat-container">
+    <img src={avatarSrc} width="50" height="50" />
       <h6>
         Your username:
         <span class="username">{user}</span>

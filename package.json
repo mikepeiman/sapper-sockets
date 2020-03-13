@@ -15,6 +15,7 @@
     "autoprefixer": "^9.7.4",
     "cirrus-ui": "^0.5.5",
     "compression": "^1.7.1",
+    "network-avatar-picker": "^1.4.0",
     "node-sass": "^4.13.1",
     "normalize.css": "^8.0.1",
     "polka": "next",
