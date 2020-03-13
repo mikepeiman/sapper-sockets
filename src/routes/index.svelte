@@ -2,13 +2,28 @@
   import { onMount } from "svelte";
   onMount(() => {
     // document.documentElement.style.setProperty("--custom-page-bg", "white");
-    let bg = `linear-gradient(-135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
-    document.querySelector("#sapper").style.setProperty(`--custom-page-bg`, bg);
+    // let bg = `linear-gradient(-135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
+    // document.querySelector("#sapper").style.setProperty(`--custom-page-bg`, bg);
+
+
+    // let bg2 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
+    // let bg1 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
+
+    
+    let bg1 = `linear-gradient(-240deg, rgba(255,25,255,0.25), rgba(25,155,255,0.5))`;
+    let bg2 = `linear-gradient(-120deg, rgba(255,25,255,0.35), rgba(25,155,255,0.35))`;
+
+
+
+    document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
+    document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
+    let sapper = document.querySelector("#sapper");
+    sapper.classList.toggle("transition");
+
   });
 </script>
 
 <style>
-
   h1,
   figure,
   p {

@@ -10,9 +10,22 @@
   $: user = "";
 
   onMount(() => {
-    let bg = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
-    // document.documentElement.style.setProperty(`--custom-page-bg`, bg)
-    document.querySelector("#sapper").style.setProperty(`--custom-page-bg`, bg);
+    // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
+    // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
+
+    let bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), rgba(25,155,255,0.5))`;
+    let bg2 = `linear-gradient(-240deg, rgba(255,25,255,0.35), rgba(25,155,255,0.35))`;
+
+    document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
+    document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
+    let sapper = document.querySelector("#sapper");
+    sapper.classList.toggle("transition");
+    setTimeout(() => {
+      // sapper.classList.toggle("transition");
+    }, 500);
+
+    // document.querySelector("#sapper").style.setProperty(`--custom-page-bg1`, bg);
+    // document.querySelector("#sapper").style.setProperty(`--custom-page-bg1`, bg1);
   });
 
   function submitMsg() {
@@ -53,7 +66,7 @@
   }
 </script>
 
-<style>
+<style lang="scss">
   .hero-body {
     align-items: flex-start;
     width: 100%;

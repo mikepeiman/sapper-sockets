@@ -12,8 +12,16 @@
   export let posts;
   import { onMount } from "svelte";
   onMount(() => {
-    // document.documentElement.style.setProperty("--custom-page-bg", "white");
-        document.querySelector("#sapper").style.setProperty(`--custom-page-bg`, 'lightpink');
+    
+    let bg1 = `linear-gradient(-120deg, rgba(255,25,255,0.25), rgba(25,155,255,0.5))`;
+    let bg2 = `linear-gradient(0deg, rgba(255,25,255,0.35), rgba(25,155,255,0.35))`;
+
+
+    document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
+    document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
+    let sapper = document.querySelector("#sapper");
+    sapper.classList.toggle("transition");
+
   });
 </script>
 
