@@ -19,9 +19,17 @@
     avatarUrl,
     avatarSrc,
     emojiPicked,
-    emojiPicker;
+    emojiPicker,
+    currentColor;
 
+  $: bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
+  $: bg2 = `linear-gradient(-240deg, ${currentColor}, rgba(25,155,255,0.35))`;
+
+  $: document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
+  $: document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
+  
   emojiPicked = "...";
+  currentColor = "rgba(255,25,255,0.35)";
   socket.on("message", message => {
     messages = [...messages, message];
     console.log(
@@ -52,8 +60,7 @@
     // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
     // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
 
-    let bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), rgba(25,155,255,0.5))`;
-    let bg2 = `linear-gradient(-240deg, rgba(255,25,255,0.35), rgba(25,155,255,0.35))`;
+    // bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
 
     document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
     document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
@@ -110,7 +117,6 @@
         }
       }
     });
-
     pickr.on("init", instance => {
       // Grab actual input-element
       const { result } = instance.getRoot().interaction;
@@ -127,6 +133,15 @@
         },
         { capture: true }
       );
+    });
+
+    pickr.on("change", color => {
+      console.log(`color is changiiiiiiing! `, color, color.toRGBA());
+      let rgba = color.toRGBA();
+      currentColor = `rgba(${Math.round(rgba[0])}, ${Math.round(
+        rgba[1]
+      )}, ${Math.round(rgba[2])}, ${rgba[3].toFixed(2)})`;
+      console.log(`currentColor constructed as RGBA: ${currentColor}`);
     });
   }
 
