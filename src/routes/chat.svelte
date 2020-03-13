@@ -7,7 +7,7 @@
   import io from "socket.io-client";
   import generate from "project-name-generator";
   import EmojiButton from "@joeattardi/emoji-button";
-import emojis from 'emojis-list'
+  import emojis from "emojis-list";
   let socket = io();
 
   $: user = "";
@@ -19,8 +19,7 @@ import emojis from 'emojis-list'
     emojiPicked,
     emojiPicker;
 
-
-
+  emojiPicked = "...";
   socket.on("message", message => {
     messages = [...messages, message];
     console.log(
@@ -42,9 +41,11 @@ import emojis from 'emojis-list'
   });
 
   onMount(() => {
-    let rand = getRandomInt(0,emojis.length)
-    console.log(`random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`)
-        emojiPicked = emojis[rand]
+    let rand = getRandomInt(0, emojis.length);
+    console.log(
+      `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
+    );
+    emojiPicked = emojis[rand];
     emojiPicker = new EmojiButton({ zIndex: 99 });
     // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
     // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
@@ -66,7 +67,7 @@ import emojis from 'emojis-list'
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+  }
 
   function submitMsg() {
     // let msg = document.querySelector('#message').value
@@ -126,7 +127,7 @@ import emojis from 'emojis-list'
     emojiPicker.togglePicker(e.target);
     emojiPicker.on("emoji", emoji => {
       console.log(`returned emoji ${emoji}`);
-      emojiPicked = emoji
+      emojiPicked = emoji;
     });
   }
 </script>
@@ -183,6 +184,11 @@ import emojis from 'emojis-list'
     }
   }
 
+  .emoji-wrapper {
+    display: flex;
+    font-size: 2rem;
+    align-items: center;
+  }
   #chat-window {
     height: 50vh;
     width: 100%;
@@ -236,7 +242,7 @@ import emojis from 'emojis-list'
   <div class="hero fullscreen">
     <div class="chat-container">
       <div class="user-info">
-        <img src={avatarSrc} width="50" height="50" />
+        <div class="emoji-wrapper" width="50" height="50">{emojiPicked}</div>
         <h6>
           Your username:
           <span class="username">{user}</span>
@@ -245,7 +251,7 @@ import emojis from 'emojis-list'
       <div class="form-group chat-element">
         <label class="form-group-label" on:click={togglePicker}>
           <span class="icon user">
-            <i class="fa-wrapper far fa-user" />
+            <!-- <i class="fa-wrapper far fa-user" /> -->
             {emojiPicked}
           </span>
         </label>
