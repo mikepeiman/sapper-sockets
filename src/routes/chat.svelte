@@ -72,7 +72,9 @@
 
   socket.on("usernames", users => {
     usernames = users;
-    console.log(`client receiving updated usernames: ${usernames}`);
+    console.log(
+      `client.username ${socket.username} receiving updated usernames: ${usernames}`
+    );
   });
 
   onMount(async () => {
@@ -103,12 +105,13 @@
       { user: user, color: currentColor, emoji: emojiPicked },
       exists => {
         if (!exists) {
+          socket.username = user;
           console.log(
-            `client receiving signal that this username ${user} is valid`
+            `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
           );
         } else {
           console.log(
-            `client receiving signal that this username ${user} is INVALID`
+            `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
           );
         }
       }
@@ -195,13 +198,22 @@
 
   function submitMsg() {
     // let msg = document.querySelector('#message').value
-
-    let thisMsg = {
-      username: user,
-      body: currentMessage
-    };
-    messages = [...messages, thisMsg];
-    socket.emit("message", thisMsg);
+    if (currentMessage.length > 0) {
+      let thisMsg = {
+        username: user,
+        body: currentMessage
+      };
+      messages = [...messages, thisMsg];
+      socket.emit("message", thisMsg);
+    }
+    if (user !== socket.username) {
+      console.log(
+        `submitMsg function inside about.svelte ${socket.username} does not equal current username ${user} (no message: ${currentMessage})`
+      );
+      if (checkIsUserNameValid(user)) {
+        updateUserName();
+      }
+    }
     console.log(
       `submitMsg function inside about.svelte ${socket.id} ||| ${user}::: ${currentMessage}`
     );
@@ -212,7 +224,7 @@
   }
 
   function emitUserDisconnect() {
-    socket.emit("disconnected");
+    // socket.emit("disconnected");
   }
 
   function placeholderNameInit() {
@@ -236,13 +248,35 @@
   function onFocus(e) {
     e.target.select();
   }
+
+  function checkIsUserNameValid(str) {
+    if (usernames.indexOf(str) == -1) {
+      console.log(`checkIsUserNameValid returns true (unique) for ${str}`);
+      return true;
+    } else {
+      console.log(`checkIsUserNameValid returns false (duplicate) for ${str}`);
+      return false;
+    }
+  }
   function onBlur(e) {
-    e.target.value.length > 1
-      ? (user = e.target.value)
-      : (user = generatedUsername);
+    user.length > 1 ? user : (user = generatedUsername);
+    if (checkIsUserNameValid(user)) {
+      updateUserName();
+    }
     console.log(
       `onBlur e.target.value.length ${e.target.value.length} e.target.value ${e.target.value} generatedUsername ${generatedUsername}`
     );
+  }
+
+  function onKeypress(e) {
+    if (e.keyCode == 13) {
+      checkIsUserNameValid(user);
+    }
+  }
+
+  function updateUserName() {
+    socket.emit("update username", user);
+    socket.username = user;
   }
 
   function togglePicker(e) {
@@ -428,6 +462,7 @@
           class="form-group-input"
           on:focus={onFocus}
           on:blur={onBlur}
+          on:keypress={onKeypress}
           bind:value={user} />
         <label class="form-group-label">
           <span class="icon checkmark">

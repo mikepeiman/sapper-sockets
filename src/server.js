@@ -42,16 +42,29 @@ io.on("connection", socket => {
       `client ${socket.id} loaded, data: user ${data.user} emoji ${data.emoji} color ${data.color}`
     );
     if (usernames.indexOf(data.user !== -1)) {
-      console.log(`username is valid due to unique`);
-      userNameExists(false);
-      socket.username = data.user;
+      let name = data.user
+      console.log(`username ${name} is valid due to unique`);
+
+      socket.username = name;
+      console.log(`now logging socket.username immediately following assignment ${socket.username}`);
       usernames = [...usernames, data.user];
       socket.broadcast.emit("usernames", usernames);
+      socket.emit("usernames", usernames);
+      userNameExists(false);
     } else {
-      console.log(`username not valid due to duplicate`);
+      console.log(`username ${data.user} not valid due to duplicate`);
       userNameExists(true);
     }
   });
+  socket.on('update username', name => {
+    console.log(`server asked to update username with ${name}, names: `, usernames)
+    usernames.splice(usernames.indexOf(socket.username), 1)
+    usernames = [...usernames, name]
+    socket.username = name
+    socket.broadcast.emit("usernames", usernames);
+    socket.emit("usernames", usernames);
+    console.log(`server asked to update username AFTER: with ${name}, names: `, usernames)
+  })
 
   socket.on("typing", username => {
     socket.broadcast.emit("typing", username);
@@ -60,6 +73,16 @@ io.on("connection", socket => {
   socket.on("message", message => {
     socket.broadcast.emit("message", message);
   });
+
+  socket.on('disconnect', data => {
+    if(!socket.username) {
+      console.log(`no socket.username set here!`)
+    } else {
+      console.log(`disconnecting socket.username ${socket.username}`)
+      usernames.splice(usernames.indexOf(socket.username), 1)
+      socket.broadcast.emit("usernames", usernames);
+    }
+  })
 
   socket.on("avatar init", () => {
     //   (async () => {
