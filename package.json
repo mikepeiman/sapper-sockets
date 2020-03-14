@@ -17,6 +17,7 @@
     "autoprefixer": "^9.7.4",
     "cirrus-ui": "^0.5.5",
     "compression": "^1.7.1",
+    "cookie-parser": "^1.4.4",
     "emojis-list": "^3.0.0",
     "network-avatar-picker": "^1.4.0",
     "node-sass": "^4.13.1",

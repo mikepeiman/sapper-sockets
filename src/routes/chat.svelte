@@ -11,6 +11,7 @@
   // import Pickr from '@simonwep/pickr';
   // import '@simonwep/pickr/dist/themes/classic.min.css';
   let socket = io();
+  let initialized = false;
   import {
     storeUsernames,
     storeThisUser,
@@ -32,7 +33,7 @@
   $: bg2 = `linear-gradient(-240deg, ${currentColor}, rgba(25,155,255,0.35))`;
 
   $: {
-    if (typeof window !== "undefinded") {
+    if (typeof window !== "undefined") {
       window.addEventListener("beforeunload", e => {
         console.log(
           `Window about to unload, current client data is username ${user} color ${currentColor} emoji ${emojiPicked}`
@@ -80,42 +81,42 @@
   onMount(async () => {
     // localStorage.debug = '*';
 
-    let rand = getRandomInt(0, emojis.length);
-    console.log(
-      `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
-    );
-    emojiPicked = await emojis[rand];
-    emojiPicker = new EmojiButton({ zIndex: 99 });
-    // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
-    // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
-
-    // bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
+    if (!initialized) {
+      let rand = getRandomInt(0, emojis.length);
+      console.log(
+        `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
+      );
+      emojiPicked = await emojis[rand];
+      emojiPicker = new EmojiButton({ zIndex: 99 });
+      user = generatedUsername = generate({ number: true }).dashed;
+      console.log(`Chat onMount, generated username ${generatedUsername}`);
+      placeholderNameInit();
+      avatarInit();
+      colorPickerInit();
+      socket.emit(
+        "client loaded",
+        { user: user, color: currentColor, emoji: emojiPicked },
+        exists => {
+          if (!exists) {
+            socket.username = user;
+            console.log(
+              `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
+            );
+          } else {
+            console.log(
+              `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
+            );
+          }
+        }
+      );
+    }
 
     document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
     document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
     let sapper = document.querySelector("#sapper");
     sapper.classList.toggle("transition");
-    user = generatedUsername = generate({ number: true }).dashed;
-    console.log(`Chat onMount, generated username ${generatedUsername}`);
-    placeholderNameInit();
-    avatarInit();
-    colorPickerInit();
-    socket.emit(
-      "client loaded",
-      { user: user, color: currentColor, emoji: emojiPicked },
-      exists => {
-        if (!exists) {
-          socket.username = user;
-          console.log(
-            `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
-          );
-        } else {
-          console.log(
-            `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
-          );
-        }
-      }
-    );
+
+    initialized = true;
   });
 
   function colorPickerInit() {
