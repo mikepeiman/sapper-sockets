@@ -11,7 +11,12 @@
   // import Pickr from '@simonwep/pickr';
   // import '@simonwep/pickr/dist/themes/classic.min.css';
   let socket = io();
-
+  import {
+    storeUsernames,
+    storeThisUser,
+    storeThisColor,
+    storeThisEmoji
+  } from "./../stores.js";
   $: user = "";
   let generatedUsername,
     placeholderName,
@@ -20,13 +25,28 @@
     avatarSrc,
     emojiPicked,
     emojiPicker,
-    currentColor;
+    currentColor,
+    usernames = [];
 
   $: bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
   $: bg2 = `linear-gradient(-240deg, ${currentColor}, rgba(25,155,255,0.35))`;
 
-  $: document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
-  $: document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
+  $: {
+    if (typeof window !== "undefinded") {
+      window.addEventListener("beforeunload", e => {
+        console.log(
+          `Window about to unload, current client data is username ${user} color ${currentColor} emoji ${emojiPicked}`
+        );
+        storeThisColor.set(currentColor);
+        storeThisEmoji.set(emojiPicked);
+        storeThisUser.set(user);
+        storeUsernames.set(usernames);
+      });
+
+      document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
+      document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
+    }
+  }
 
   emojiPicked = "...";
   currentColor = "rgba(255,25,255,0.35)";
@@ -50,12 +70,19 @@
     avatarSrc = data;
   });
 
-  onMount(() => {
+  socket.on("usernames", users => {
+    usernames = users;
+    console.log(`client receiving updated usernames: ${usernames}`);
+  });
+
+  onMount(async () => {
+    // localStorage.debug = '*';
+
     let rand = getRandomInt(0, emojis.length);
     console.log(
       `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
     );
-    emojiPicked = emojis[rand];
+    emojiPicked = await emojis[rand];
     emojiPicker = new EmojiButton({ zIndex: 99 });
     // let bg1 = `linear-gradient(135deg, rgba(255,125,255,0.75), rgba(105,125,255,0.5))`;
     // let bg2 = `linear-gradient(-135deg, rgba(175,75,255,0.5), rgba(105,155,255,0.75))`;
@@ -71,6 +98,21 @@
     placeholderNameInit();
     avatarInit();
     colorPickerInit();
+    socket.emit(
+      "client loaded",
+      { user: user, color: currentColor, emoji: emojiPicked },
+      exists => {
+        if (!exists) {
+          console.log(
+            `client receiving signal that this username ${user} is valid`
+          );
+        } else {
+          console.log(
+            `client receiving signal that this username ${user} is INVALID`
+          );
+        }
+      }
+    );
   });
 
   function colorPickerInit() {
@@ -109,8 +151,8 @@
           hex: true,
           rgba: true,
           hsla: true,
-          hsva: true,
-          cmyk: true,
+          hsva: false,
+          cmyk: false,
           input: true,
           clear: true,
           save: true
@@ -338,6 +380,13 @@
     white-space: nowrap;
     overflow: hidden;
   }
+  .usernames-list {
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 1rem;
+    border-radius: 3px;
+  }
 </style>
 
 <svelte:head>
@@ -347,6 +396,11 @@
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
   <h1 class="u-text-center u-font-alt">Chat</h1>
+  <div class="usernames-list">
+    {#each usernames as user}
+      <div>{user}</div>
+    {/each}
+  </div>
   <div class="hero fullscreen">
     <div class="chat-container">
       <div class="user-info">
@@ -372,7 +426,6 @@
           id="username"
           type="text"
           class="form-group-input"
-          placeholder={placeholderName}
           on:focus={onFocus}
           on:blur={onBlur}
           bind:value={user} />

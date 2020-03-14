@@ -23,6 +23,7 @@ app.use(
 );
 
 const io = serverSocket(server);
+let usernames = [];
 // using this great, succinct tutorial to learn socket.io:
 // https://www.youtube.com/watch?v=KNqVpESuyQo&list=PL4cUxeGkcC9i4V-_ZVwLmOusj8YAUhj_9&index=4
 
@@ -36,6 +37,22 @@ io.on("connection", socket => {
   //   io.sockets.emit("chat", msg);
   // });
 
+  socket.on("client loaded", (data, userNameExists) => {
+    console.log(
+      `client ${socket.id} loaded, data: user ${data.user} emoji ${data.emoji} color ${data.color}`
+    );
+    if (usernames.indexOf(data.user !== -1)) {
+      console.log(`username is valid due to unique`);
+      userNameExists(false);
+      socket.username = data.user;
+      usernames = [...usernames, data.user];
+      socket.broadcast.emit("usernames", usernames);
+    } else {
+      console.log(`username not valid due to duplicate`);
+      userNameExists(true);
+    }
+  });
+
   socket.on("typing", username => {
     socket.broadcast.emit("typing", username);
   });
@@ -45,29 +62,28 @@ io.on("connection", socket => {
   });
 
   socket.on("avatar init", () => {
-  //   (async () => {
-  //     try {
-  //       const res = await avatarPicker.twitter.getAvatar('mikepeiman');
-  //       console.log(`inside server socket.on avatar init, res `, res)
-  //       const b64 = new Buffer.from(res).toString('base64')
-  //       const mimeType = 'image/png'
-  //       const src = `data:${mimeType};base64,${b64}`
-  //       socket.emit('avatar returned', src)
-  //     } catch (e) {
-  //       // Deal with the fact the chain failed
-  //       console.log(`inside server socket.on avatar init, failed `, e)
-  //     }
-  // })();
-  //   (async () => {
-  //     try {
-  //       const res = await avatarPicker.facebook.getAvatarUrl("mikepeiman");
-  //       console.log(`inside server socket.on avatar init, res `, res)
-  //     } catch (e) {
-  //       // Deal with the fact the chain failed
-  //       console.log(`inside server socket.on avatar init, failed `, e)
-  //     }
-  //   })();
-
+    //   (async () => {
+    //     try {
+    //       const res = await avatarPicker.twitter.getAvatar('mikepeiman');
+    //       console.log(`inside server socket.on avatar init, res `, res)
+    //       const b64 = new Buffer.from(res).toString('base64')
+    //       const mimeType = 'image/png'
+    //       const src = `data:${mimeType};base64,${b64}`
+    //       socket.emit('avatar returned', src)
+    //     } catch (e) {
+    //       // Deal with the fact the chain failed
+    //       console.log(`inside server socket.on avatar init, failed `, e)
+    //     }
+    // })();
+    //   (async () => {
+    //     try {
+    //       const res = await avatarPicker.facebook.getAvatarUrl("mikepeiman");
+    //       console.log(`inside server socket.on avatar init, res `, res)
+    //     } catch (e) {
+    //       // Deal with the fact the chain failed
+    //       console.log(`inside server socket.on avatar init, failed `, e)
+    //     }
+    //   })();
     // socket.emit("avatar returned", true);
   });
 });
