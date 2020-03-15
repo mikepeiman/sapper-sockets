@@ -17,6 +17,7 @@ export const storeThisUser = {
   subscribe: thisUser.subscribe,
   set: val => {
     thisUser.set(val)
+    console.log(`storeThisUser.set called`)
     localStorage.setItem('thisUser', JSON.stringify(val))
   }
 }

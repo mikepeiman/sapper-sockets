@@ -74,8 +74,16 @@
   socket.on("usernames", users => {
     usernames = users;
     console.log(
-      `client.username ${socket.username} receiving updated usernames: ${usernames}`
+      `\nclient.username ${socket.username} receiving updated usernames: ${usernames}`
     );
+  });
+
+    socket.on("users", users => {
+    // usernames = users;
+    console.log(
+      `client.username ${socket.username} receiving full list users objects`
+    );
+    console.dir(users,`\n`)
   });
 
   onMount(async () => {
@@ -89,7 +97,7 @@
       emojiPicked = await emojis[rand];
       emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
-      console.log(`Chat onMount, generated username ${generatedUsername}`);
+      console.log(`Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`);
       placeholderNameInit();
       avatarInit();
       colorPickerInit();
@@ -99,6 +107,7 @@
         exists => {
           if (!exists) {
             socket.username = user;
+            storeThisUser.set(user)
             console.log(
               `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
             );

@@ -24,31 +24,36 @@ app.use(
 );
 
 const io = new serverSocket(server);
-let users = []
+let users = [];
 let usernames = [];
+let i = 0;
+let previousClient = false;
 
-function getElByPropVal(myArray, prop, val){
+function getElByPropVal(myArray, prop, val) {
   for (var i = 0, length = myArray.length; i < length; i++) {
-      if (myArray[i][prop] == val){
-          return myArray[i];
-      }
+    if (myArray[i][prop] == val) {
+      return myArray[i];
+    }
   }
 }
-
 
 // using this great, succinct tutorial to learn socket.io:
 // https://www.youtube.com/watch?v=KNqVpESuyQo&list=PL4cUxeGkcC9i4V-_ZVwLmOusj8YAUhj_9&index=4
 
-io.on("connection", socket => {
+io.sockets.on("connection", socket => {
+
   let cookie = socket.handshake.headers.cookie;
-  cookie = cookie.slice(cookie.indexOf("=")+1)
+  cookie = cookie.slice(cookie.indexOf("=") + 1);
   // socket.join('chatlobby')
-  console.log(`serverSockets: made socket connection `, socket.id);
-  console.log(`current users array: `, users)
-  let el = users.find(user => user.id === cookie) || 'not found'
+  console.log(`serverSockets: made socket connection ${i}: `, socket.id);
+
+  let el = users.find(user => user.socket === cookie) || "not found";
   // let match = users.find(x => x.id === socket.id).id === socket.id
-  console.log(`\nis there a cookie ${cookie} match with a previous socket.id? client name ${el.name}\n`)
-  
+  console.log(
+    `\nis there a cookie ${cookie} match with a previous socket.id? client name ${el.name ? el.name : el}`
+  );
+  console.dir(el,`\n\n`)
+
   // var cookies = cookieParser(socket.handshake.headers.cookie);
   console.log(`socket.handshake.headers.cookie ${cookie}`);
   // socket.on("new message", msg => {
@@ -60,29 +65,46 @@ io.on("connection", socket => {
 
   socket.on("client loaded", (data, userNameExists) => {
     console.log(
-      `client ${socket.id} loaded, data: user ${data.user} emoji ${data.emoji} color ${data.color}`
+      `client ${socket.id} loaded \n   name: ${data.user} \n   emoji ${data.emoji} \n   color ${data.color}`
     );
-    if (usernames.indexOf(data.user !== -1)) {
-      let name = data.user;
-      console.log(`username ${name} is valid due to unique`);
+    i++
 
-      socket.username = name;
-      console.log(
-        `now logging socket.username immediately following assignment ${socket.username}`
-      );
-      usernames = [...usernames, data.user];
-      users = [...users, {
-        name: name,
-        id: socket.id
-      }]
+    if(el.id === cookie){
+      console.log(`\nWe have a cookie-id match. current users array: `, users, `\n`);
       socket.broadcast.emit("usernames", usernames);
       socket.emit("usernames", usernames);
-      userNameExists(false);
     } else {
-      console.log(`username ${data.user} not valid due to duplicate`);
-      userNameExists(true);
+      if (usernames.indexOf(data.user !== -1)) {
+        let name = data.user;
+        console.log(`username ${name} is valid due to unique`);
+  
+        socket.username = name;
+        console.log(
+          `now logging socket.username immediately following assignment ${socket.username}`
+        );
+        usernames = [...usernames, data.user];
+        users = [
+          ...users,
+          {
+            id: i,
+            name: name,
+            socket: socket.id,
+            cookie: cookie
+          }
+        ];
+        socket.broadcast.emit("usernames", usernames);
+        socket.emit("usernames", usernames);
+        userNameExists(false);
+      } else {
+        console.log(`username ${data.user} not valid due to duplicate`);
+        userNameExists(true);
+      }
     }
+    socket.broadcast.emit("users", users);
+    socket.emit("users", users);
+    console.log(`\ncurrent users array: `, users, `\n`);
   });
+
   socket.on("update username", name => {
     console.log(
       `server asked to update username with ${name}, names: `,
@@ -113,42 +135,21 @@ io.on("connection", socket => {
       reason
     );
     if (reason === "transport close") {
-      console.log(`transport close given reason, socket.open `, socket.open)
-socket.open
+      console.log(`transport close given reason, socket.open `, socket.open);
+      socket.open;
     }
 
     if (!socket.username) {
       console.log(`no socket.username set here!`);
     } else {
-      console.log(`\ndisconnecting socket.username ${socket.username} with cookie ${cookie} and socket.id ${socket.id}\n`);
+      console.log(
+        `\ndisconnecting socket.username ${socket.username} with cookie ${cookie} and socket.id ${socket.id}\n`
+      );
+      let pos = users.map(function(e) { return e.socket; }).indexOf(socket.id);
+      console.log(`Found user object position ${pos} in users `, users[pos])
       usernames.splice(usernames.indexOf(socket.username), 1);
-      socket.broadcast.emit("usernames", usernames);
+      socket.broadcast.emit("usernames after splicing out the disconnect", usernames);
     }
   });
 
-  socket.on("avatar init", () => {
-    //   (async () => {
-    //     try {
-    //       const res = await avatarPicker.twitter.getAvatar('mikepeiman');
-    //       console.log(`inside server socket.on avatar init, res `, res)
-    //       const b64 = new Buffer.from(res).toString('base64')
-    //       const mimeType = 'image/png'
-    //       const src = `data:${mimeType};base64,${b64}`
-    //       socket.emit('avatar returned', src)
-    //     } catch (e) {
-    //       // Deal with the fact the chain failed
-    //       console.log(`inside server socket.on avatar init, failed `, e)
-    //     }
-    // })();
-    //   (async () => {
-    //     try {
-    //       const res = await avatarPicker.facebook.getAvatarUrl("mikepeiman");
-    //       console.log(`inside server socket.on avatar init, res `, res)
-    //     } catch (e) {
-    //       // Deal with the fact the chain failed
-    //       console.log(`inside server socket.on avatar init, failed `, e)
-    //     }
-    //   })();
-    // socket.emit("avatar returned", true);
-  });
 });
