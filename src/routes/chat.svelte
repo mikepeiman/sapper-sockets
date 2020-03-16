@@ -87,7 +87,7 @@
   });
 
   onMount(async () => {
-    // localStorage.debug = '*';
+    localStorage.debug = '*';
 
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
@@ -434,7 +434,7 @@
 </style>
 
 <svelte:head>
-  <title>About</title>
+  <title>Chat</title>
 </svelte:head>
 <svelte:window on:unload={emitUserDisconnect} />
 
