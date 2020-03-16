@@ -26,6 +26,8 @@ app.use(
 const io = new serverSocket(server);
 let users = [];
 let usernames = [];
+let rooms = [];
+let room = "";
 let i = 0;
 let previousClient = false;
 
@@ -36,14 +38,14 @@ function getElByPropVal(myArray, prop, val) {
     }
   }
 }
-io.use((socket, next) => {
-  if (socket.request.headers.cookie) {
-    console.log(`io.use((socket, next) => {
-      if (socket.request.headers.cookie) ${socket.request.headers.cookie} socket.handshake.headers.cookie  ${socket.handshake.headers.cookie}`);
-    return next();
-  }
-  next(new Error("Authentication error"));
-});
+// io.use((socket, next) => {
+//   if (socket.request.headers.cookie) {
+//     console.log(`io.use((socket, next) => {
+//       if (socket.request.headers.cookie) ${socket.request.headers.cookie} socket.handshake.headers.cookie  ${socket.handshake.headers.cookie}`);
+//     return next();
+//   }
+//   next(new Error("Authentication error"));
+// });
 
 // using this great, succinct tutorial to learn socket.io:
 // https://www.youtube.com/watch?v=KNqVpESuyQo&list=PL4cUxeGkcC9i4V-_ZVwLmOusj8YAUhj_9&index=4
@@ -53,7 +55,7 @@ io.sockets.on("connection", socket => {
   cookie = cookie.slice(cookie.indexOf("=") + 1);
   // socket.join('chatlobby')
   console.log(`serverSockets: made socket connection ${i}: `, socket.id);
-
+  
   let el = users.find(user => user.socket === cookie) || "not found";
   // let match = users.find(x => x.id === socket.id).id === socket.id
   console.log(

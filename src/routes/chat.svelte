@@ -19,6 +19,7 @@
     storeThisEmoji
   } from "./../stores.js";
   $: user = "";
+  $: roomName = "";
   let generatedUsername,
     placeholderName,
     avatar,
@@ -27,7 +28,10 @@
     emojiPicked,
     emojiPicker,
     currentColor,
-    usernames = [];
+    usernames = [],
+    rooms = ["Room one", "Room two"],
+    generatedRoomName,
+    chatInitiated = false;
 
   $: bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
   $: bg2 = `linear-gradient(-240deg, ${currentColor}, rgba(25,155,255,0.35))`;
@@ -78,16 +82,16 @@
     );
   });
 
-    socket.on("users", users => {
+  socket.on("users", users => {
     // usernames = users;
     console.log(
       `client.username ${socket.username} receiving full list users objects`
     );
-    console.dir(users,`\n`)
+    console.dir(users, `\n`);
   });
 
   onMount(async () => {
-    localStorage.debug = '*';
+    localStorage.debug = "*";
 
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
@@ -97,27 +101,12 @@
       emojiPicked = await emojis[rand];
       emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
-      console.log(`Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`);
+      roomName = generatedRoomName = generate({ number: false }).dashed;
+      console.log(
+        `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`
+      );
       placeholderNameInit();
       avatarInit();
-      colorPickerInit();
-      socket.emit(
-        "client loaded",
-        { user: user, color: currentColor, emoji: emojiPicked },
-        exists => {
-          if (!exists) {
-            socket.username = user;
-            storeThisUser.set(user)
-            console.log(
-              `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
-            );
-          } else {
-            console.log(
-              `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
-            );
-          }
-        }
-      );
     }
 
     document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
@@ -226,6 +215,31 @@
     }
     console.log(
       `submitMsg function inside about.svelte ${socket.id} ||| ${user}::: ${currentMessage}`
+    );
+  }
+
+  function startChat() {
+    socket.emit("chatroom initialized", roomName);
+
+    chatInitiated = true;
+    rooms = [...rooms, roomName];
+    window.location.href += `#${roomName}`;
+    socket.emit(
+      "client loaded",
+      { user: user, color: currentColor, emoji: emojiPicked },
+      userNameExists => {
+        if (!userNameExists) {
+          socket.username = user;
+          storeThisUser.set(user);
+          console.log(
+            `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
+          );
+        } else {
+          console.log(
+            `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
+          );
+        }
+      }
     );
   }
 
@@ -352,6 +366,10 @@
   textarea {
     min-height: 50vh;
   }
+
+  .chat-input-group {
+    align-self: flex-end;
+  }
   .chat-container {
     & .user-info {
       display: flex;
@@ -434,77 +452,108 @@
 </style>
 
 <svelte:head>
-  <title>Chat</title>
+  <title>Chatroom: {roomName}</title>
 </svelte:head>
 <svelte:window on:unload={emitUserDisconnect} />
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
-  <h1 class="u-text-center u-font-alt">Chat</h1>
-  <div class="usernames-list">
-    {#each usernames as user}
-      <div>{user}</div>
-    {/each}
-  </div>
+  <h1 class="u-text-center u-font-alt">Chatroom: {roomName}</h1>
+
   <div class="hero fullscreen">
-    <div class="chat-container">
-      <div class="user-info">
-        <div class="emoji-wrapper" width="50" height="50">{emojiPicked}</div>
-        <h6>
-          Your username:
-          <span class="username">{user}</span>
-        </h6>
-      </div>
-      <div class="form-group chat-element">
-        <label class="form-group-label" on:click={togglePicker}>
-          <span class="icon user">
-            <!-- <i class="fa-wrapper far fa-user" /> -->
-            {emojiPicked}
-          </span>
-        </label>
-        <label class="form-group-label">
-          <span class="icon palette color-picker">
-            <!-- <i class="fa-wrapper fas fa-palette" /> -->
-          </span>
-        </label>
-        <input
-          id="username"
-          type="text"
-          class="form-group-input"
-          on:focus={onFocus}
-          on:blur={onBlur}
-          on:keypress={onKeypress}
-          bind:value={user} />
-        <label class="form-group-label">
-          <span class="icon checkmark">
-            <i class="fa-wrapper fas fa-check" />
-          </span>
-        </label>
-      </div>
+    <r-grid columns="8">
+      {#if chatInitiated}
+        <r-cell span="1-3">
+          <div class="chat-container">
+            <div class="user-info">
+              <div class="emoji-wrapper" width="50" height="50">
+                {emojiPicked}
+              </div>
+              <h6>
+                Your username:
+                <span class="username">{user}</span>
+              </h6>
+            </div>
+            <div class="form-group chat-element">
+              <label class="form-group-label" on:click={togglePicker}>
+                <span class="icon user">
+                  <!-- <i class="fa-wrapper far fa-user" /> -->
+                  {emojiPicked}
+                </span>
+              </label>
+              <label class="form-group-label">
+                <span class="icon palette color-picker" on:load={colorPickerInit()}>
+                  <!-- <i class="fa-wrapper fas fa-palette" /> -->
+                </span>
+              </label>
+              <input
+                id="username"
+                type="text"
+                class="form-group-input"
+                on:focus={onFocus}
+                on:blur={onBlur}
+                on:keypress={onKeypress}
+                bind:value={user} />
+              <label class="form-group-label">
+                <span class="icon checkmark">
+                  <i class="fa-wrapper fas fa-check" />
+                </span>
+              </label>
+            </div>
 
-    </div>
-    <div class="chat-window-group">
-      <div class="chat-element" id="chat-window">
-        <div id="feedback" />
-        <ul id="messages">
-          {#each messages as message}
-            <li class="list-item" transition:fade>
-              <div class="list-item-username">{message.username}:</div>
-              <div class="list-item-message">{message.body}</div>
-            </li>
-          {/each}
-        </ul>
-      </div>
+          </div>
+          <div class="usernames-list">
+            {#each usernames as user}
+              <div>{user}</div>
+            {/each}
+          </div>
+          <div class="btn-group chat-element chat-input-group">
+            <input
+              type="text"
+              id="message"
+              bind:value={currentMessage}
+              on:keypress={typing}
+              placeholder="What's up?" />
 
-      <div class="btn-group chat-element">
-        <input
-          type="text"
-          id="message"
-          bind:value={currentMessage}
-          on:keypress={typing}
-          placeholder="What's up?" />
+            <button class="btn-info" id="send-message">Send</button>
+          </div>
+        </r-cell>
+        <r-cell span="4-8">
 
-        <button class="btn-info" id="send-message">Send</button>
-      </div>
-    </div>
+          <div class="chat-window-group">
+            <div class="chat-element" id="chat-window">
+              <div id="feedback" />
+              <ul id="messages">
+                {#each messages as message}
+                  <li class="list-item" transition:fade>
+                    <div class="list-item-username">{message.username}:</div>
+                    <div class="list-item-message">{message.body}</div>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+
+          </div>
+        </r-cell>
+      {:else}
+        <r-cell span="row">
+          <div class="btn-group chat-element chat-input-group">
+            <input
+              type="text"
+              id="room-name"
+              on:focus={onFocus}
+              bind:value={roomName}
+              placeholder="Please enter a name for your chat room" />
+            <div class="rooms-list">
+              {#each rooms as room}
+                <a href={(window.location.href += `#${room}`)}>{room}</a>
+              {/each}
+            </div>
+            <button class="btn-info" id="send-message" on:click={startChat}>
+              Open Chatroom
+            </button>
+          </div>
+        </r-cell>
+      {/if}
+    </r-grid>
   </div>
 </form>

@@ -4,7 +4,7 @@ import { storeUsernames } from './stores.js'
 // import * as chat from './../chat.js'
 import { fade } from "svelte/transition";
 import io from "socket.io-client";
-let socket = io('/');
+let socket = io.connect('/chat');
 
 
 function submitMsg() {
