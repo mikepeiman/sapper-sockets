@@ -27,25 +27,22 @@
     avatarSrc,
     emojiPicked,
     emojiPicker,
-    color1,
-    color2,
-    gradientDegrees1,
-    gradientDegrees2,
+    currentColor,
     usernames = [],
     rooms = [],
     generatedRoomName,
     chatInitiated = false;
 
-  $: bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
-  $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1},${color2})`;
+  $: bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
+  $: bg2 = `linear-gradient(-240deg, ${currentColor}, rgba(25,155,255,0.35))`;
 
   $: {
     if (typeof window !== "undefined") {
       window.addEventListener("beforeunload", e => {
         console.log(
-          `Window about to unload, current client data is username ${user} color ${color1} emoji ${emojiPicked}`
+          `Window about to unload, current client data is username ${user} color ${currentColor} emoji ${emojiPicked}`
         );
-        storeThisColor.set(color1);
+        storeThisColor.set(currentColor);
         storeThisEmoji.set(emojiPicked);
         storeThisUser.set(user);
         storeUsernames.set(usernames);
@@ -57,8 +54,7 @@
   }
 
   emojiPicked = "...";
-  color1 = "rgba(255,25,255,0.35)";
-  color2 = "rgba(255,25,255,0.35)";
+  currentColor = "rgba(255,25,255,0.35)";
 
   socket.on("rooms", data => {
     rooms = data;
@@ -110,16 +106,6 @@
     localStorage.debug = "false";
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
-      let r1 = getRandomInt(0, 255);
-      let g1 = getRandomInt(0, 255);
-      let b1 = getRandomInt(0, 255);
-      color1 = `rgba(${r1}, ${g1},${b1},0.25)`;
-      let r2 = getRandomInt(0, 255);
-      let g2 = getRandomInt(0, 255);
-      let b2 = getRandomInt(0, 255);
-      color2 = `rgba(${r2}, ${g2},${b2},0.25)`;
-      gradientDegrees1 = getRandomInt(0,360)
-      gradientDegrees2 = getRandomInt(0,-360)
       console.log(
         `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
       );
@@ -207,10 +193,10 @@
     pickr.on("change", color => {
       console.log(`color is changiiiiiiing! `, color, color.toRGBA());
       let rgba = color.toRGBA();
-      color1 = `rgba(${Math.round(rgba[0])}, ${Math.round(
+      currentColor = `rgba(${Math.round(rgba[0])}, ${Math.round(
         rgba[1]
       )}, ${Math.round(rgba[2])}, ${rgba[3].toFixed(2)})`;
-      console.log(`color1 constructed as RGBA: ${color1}`);
+      console.log(`currentColor constructed as RGBA: ${currentColor}`);
     });
   }
 
@@ -252,7 +238,7 @@
     // window.location.href += `#${roomName}`;
     socket.emit(
       "client loaded",
-      { user: user, color: color1, emoji: emojiPicked },
+      { user: user, color: currentColor, emoji: emojiPicked },
       userNameExists => {
         if (!userNameExists) {
           socket.username = user;
@@ -574,10 +560,10 @@
         </r-cell>
       {:else}
         <r-cell span="row">
-          <h2 class="btn-info">Join Chatroom</h2>
+          <h2 class="btn-info">Chatroom Joined</h2>
           <div class="rooms-list">
             {#each rooms as room}
-              <a href="/chat/{room.name}">{room.name}</a>
+              <a href='/chat/{room.name}'>{room.name}</a>
               <span>Num users: {room.numUsers}</span>
             {/each}
           </div>
