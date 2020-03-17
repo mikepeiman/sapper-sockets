@@ -17,7 +17,7 @@
     storeThisUser,
     storeThisColor,
     storeThisEmoji
-  } from "./../stores.js";
+  } from "./../../stores.js";
   $: user = "";
   $: roomName = "";
   let generatedUsername,
@@ -29,7 +29,7 @@
     emojiPicker,
     currentColor,
     usernames = [],
-    rooms = ["Room one", "Room two"],
+    rooms = [],
     generatedRoomName,
     chatInitiated = false;
 
@@ -55,6 +55,18 @@
 
   emojiPicked = "...";
   currentColor = "rgba(255,25,255,0.35)";
+
+  socket.on("rooms", data => {
+    rooms = data;
+    console.log(`socket.on rooms in client, populate rooms array`, rooms);
+  });
+
+  socket.on("error", msg => {
+    console.log(`Client receiving error: ${msg}`);
+  });
+  socket.on("success", msg => {
+    console.log(`Client receiving success: ${msg}`);
+  });
   socket.on("message", message => {
     messages = [...messages, message];
     console.log(
@@ -91,8 +103,7 @@
   });
 
   onMount(async () => {
-    localStorage.debug = "*";
-
+    localStorage.debug = "false";
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
       console.log(
@@ -219,11 +230,12 @@
   }
 
   function startChat() {
+    socket.emit("joinRoom", roomName);
     socket.emit("chatroom initialized", roomName);
 
     chatInitiated = true;
     rooms = [...rooms, roomName];
-    window.location.href += `#${roomName}`;
+    // window.location.href += `#${roomName}`;
     socket.emit(
       "client loaded",
       { user: user, color: currentColor, emoji: emojiPicked },
@@ -449,6 +461,16 @@
     padding: 1rem;
     border-radius: 3px;
   }
+
+  .rooms-list {
+    display: flex;
+    flex-direction: column;
+    & a {
+      padding: 0.5rem;
+      border-radius: 3px;
+      background: rgba(205, 255, 255, 0.5);
+    }
+  }
 </style>
 
 <svelte:head>
@@ -481,7 +503,9 @@
                 </span>
               </label>
               <label class="form-group-label">
-                <span class="icon palette color-picker" on:load={colorPickerInit()}>
+                <span
+                  class="icon palette color-picker"
+                  on:load={colorPickerInit()}>
                   <!-- <i class="fa-wrapper fas fa-palette" /> -->
                 </span>
               </label>
@@ -536,6 +560,13 @@
         </r-cell>
       {:else}
         <r-cell span="row">
+          <h2 class="btn-info">Join Chatroom</h2>
+          <div class="rooms-list">
+            {#each rooms as room}
+              <a href='/chat/{room.name}'>{room.name}</a>
+              <span>Num users: {room.numUsers}</span>
+            {/each}
+          </div>
           <div class="btn-group chat-element chat-input-group">
             <input
               type="text"
@@ -543,13 +574,9 @@
               on:focus={onFocus}
               bind:value={roomName}
               placeholder="Please enter a name for your chat room" />
-            <div class="rooms-list">
-              {#each rooms as room}
-                <a href={(window.location.href += `#${room}`)}>{room}</a>
-              {/each}
-            </div>
+
             <button class="btn-info" id="send-message" on:click={startChat}>
-              Open Chatroom
+              Create Chatroom
             </button>
           </div>
         </r-cell>

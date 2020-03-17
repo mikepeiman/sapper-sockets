@@ -26,7 +26,10 @@ app.use(
 const io = new serverSocket(server);
 let users = [];
 let usernames = [];
-let rooms = [];
+let rooms = [
+  { name: "roomname1", numUsers: 1 },
+  { name: "roomname2", numUsers: 2 }
+];
 let room = "";
 let i = 0;
 let previousClient = false;
@@ -51,11 +54,18 @@ function getElByPropVal(myArray, prop, val) {
 // https://www.youtube.com/watch?v=KNqVpESuyQo&list=PL4cUxeGkcC9i4V-_ZVwLmOusj8YAUhj_9&index=4
 
 io.sockets.on("connection", socket => {
+  io.clients((error, clients) => {
+    if (error) throw error;
+    console.log(
+      `\n******************************\nclients ${clients} number of ${clients.length}\n******************************\n`
+    ); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
+  });
+  socket.emit("rooms", rooms);
   let cookie = socket.handshake.headers.cookie;
   cookie = cookie.slice(cookie.indexOf("=") + 1);
   // socket.join('chatlobby')
   console.log(`serverSockets: made socket connection ${i}: `, socket.id);
-  
+
   let el = users.find(user => user.socket === cookie) || "not found";
   // let match = users.find(x => x.id === socket.id).id === socket.id
   console.log(
@@ -67,12 +77,17 @@ io.sockets.on("connection", socket => {
 
   // var cookies = cookieParser(socket.handshake.headers.cookie);
   console.log(`socket.handshake.headers.cookie ${cookie}`);
-  // socket.on("new message", msg => {
-  //   console.log(
-  //     `Server received new message  ${msg.body} from client user ${msg.user} with socket id ${socket.id}`
-  //   );
-  //   io.sockets.emit("chat", msg);
-  // });
+  socket.on("joinRoom", room => {
+    // if (rooms.includes(room)) {
+    socket.join(room);
+    return socket.emit("success", `Success! Joined ${room}`);
+    // } else {
+    // return socket.emit(
+    //   "error",
+    //   `ERROR: No room by that name ___${room}___ found`
+    // );
+    // }
+  });
 
   socket.on("client loaded", (data, userNameExists) => {
     console.log(
@@ -118,12 +133,6 @@ io.sockets.on("connection", socket => {
     socket.broadcast.emit("users", users);
     socket.emit("users", users);
     console.log(`\ncurrent users array: `, users, `\n`);
-    io.clients((error, clients) => {
-      if (error) throw error;
-      console.log(
-        `\n******************************\nclients ${clients}\n******************************\n`
-      ); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
-    });
   });
 
   socket.on("update username", name => {
