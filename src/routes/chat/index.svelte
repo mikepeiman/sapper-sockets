@@ -247,15 +247,15 @@
     );
   }
 
-  function joinRoom() {
-    console.log(`client index => joinRoom() called from ${roomName}`)
-    room = { name: roomName, numUsers: 1 };
+  function joinRoom(thisRoom) {
+    console.log(`client index => joinRoom() called to join ${thisRoom}`);
+    room = { name: thisRoom, numUsers: 1 };
     socket.emit("room name", room);
-    storeRoomName.set(roomName);
+    storeRoomName.set(thisRoom);
     // socket.emit("chatroom initialized", roomName);
     // window.location.href = `/chat/${roomName}`
     storeChatUnderway.set(true);
-    rooms = [...rooms, room];
+    // rooms = [...rooms, room];
     storeChatRooms.set(rooms);
     // window.location.href += `#${roomName}`;
     socket.emit(
@@ -278,10 +278,16 @@
   }
 
   socket.on("room added", room => {
-    console.log(`client index => socket.on('room added') received room ${room.name}`, room)
+    console.log(
+      `client index => socket.on('room added') received room ${room.name}`,
+      room
+    );
     rooms = [...rooms, room];
     storeChatRooms.set(rooms);
-    console.log(`client index => socket.on('room added') now rooms array: `, rooms)
+    console.log(
+      `client index => socket.on('room added') now rooms array: `,
+      rooms
+    );
   });
 
   function typing() {
@@ -512,31 +518,33 @@
 
   <div class="hero fullscreen">
     <r-grid columns="8">
-        <r-cell span="row">
-          <h2 class="btn-info">Join Chatroom</h2>
-          <div class="rooms-list">
-            {#each rooms as room}
-              <a href="/chat/{room.name}" on:click={joinRoom}>{room.name}</a>
-              <span>Num users: {room.numUsers}</span>
-            {/each}
-          </div>
-          <div class="btn-group chat-element chat-input-group">
-            <input
-              type="text"
-              id="room-name"
-              on:focus={onFocus}
-              bind:value={roomName}
-              placeholder="Please enter a name for your chat room" />
-
-            <a
-              class="btn-info"
-              href="/chat/{roomName}"
-              id="send-message"
-              on:click={joinRoom}>
-              Create Chatroom
+      <r-cell span="row">
+        <h2 class="btn-info">Join Chatroom</h2>
+        <div class="rooms-list">
+          {#each rooms as room}
+            <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
+              {room.name}
             </a>
-          </div>
-        </r-cell>
+            <span>Num users: {room.numUsers}</span>
+          {/each}
+        </div>
+        <div class="btn-group chat-element chat-input-group">
+          <input
+            type="text"
+            id="room-name"
+            on:focus={onFocus}
+            bind:value={roomName}
+            placeholder="Please enter a name for your chat room" />
+
+          <a
+            class="btn-info"
+            href="/chat/{roomName}"
+            id="send-message"
+            on:click={joinRoom(roomName)}>
+            Create Chatroom
+          </a>
+        </div>
+      </r-cell>
     </r-grid>
   </div>
 </form>

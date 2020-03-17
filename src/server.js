@@ -63,6 +63,7 @@ io.sockets.on("connection", socket => {
 
   socket.on("joinRoom", room => {
     rooms = [...rooms, room];
+    socket.broadcast.emit("rooms", rooms);
     socket.emit("rooms", rooms);
   });
 
@@ -87,6 +88,7 @@ io.sockets.on("connection", socket => {
     console.log(`server.js => socket.on("room name"), room ${room} `, room);
     socket.join(room.name);
     socket.emit("room added", room);
+    socket.broadcast.emit("room added", room);
     // } else {
     // return socket.emit(
     //   "error",
