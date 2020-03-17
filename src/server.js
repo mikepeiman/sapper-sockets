@@ -27,8 +27,8 @@ const io = new serverSocket(server);
 let users = [];
 let usernames = [];
 let rooms = [
-  { name: "roomname1", numUsers: 1 },
-  { name: "roomname2", numUsers: 2 }
+  { name: "CoolChatRoom", numUsers: 1 },
+  { name: "HotChatPlace", numUsers: 2 }
 ];
 let room = "";
 let i = 0;
@@ -61,10 +61,10 @@ io.sockets.on("connection", socket => {
     ); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
   });
 
-  socket.on('joinRoom', room => {
-    rooms = [...rooms, room]
+  socket.on("joinRoom", room => {
+    rooms = [...rooms, room];
     socket.emit("rooms", rooms);
-  })
+  });
 
   let cookie = socket.handshake.headers.cookie;
   cookie = cookie.slice(cookie.indexOf("=") + 1);
@@ -82,10 +82,11 @@ io.sockets.on("connection", socket => {
 
   // var cookies = cookieParser(socket.handshake.headers.cookie);
   console.log(`socket.handshake.headers.cookie ${cookie}`);
-  socket.on("joinRoom", room => {
+  socket.on("room name", room => {
     // if (rooms.includes(room)) {
-    socket.join(room);
-    return socket.emit("success", `Success! Joined ${room}`);
+    console.log(`server.js => socket.on("room name"), room ${room} `, room);
+    socket.join(room.name);
+    socket.emit("room added", room);
     // } else {
     // return socket.emit(
     //   "error",
@@ -94,7 +95,7 @@ io.sockets.on("connection", socket => {
     // }
   });
 
-  socket.on("client loaded", (data, userNameExists) => {
+  socket.on("chat room loaded", (data, userNameExists) => {
     console.log(
       `client ${socket.id} loaded \n   name: ${data.user} \n   emoji ${data.emoji} \n   color ${data.color}`
     );

@@ -113,7 +113,7 @@
       );
       emojiPicked = await emojis[rand];
       emojiPicker = new EmojiButton({ zIndex: 99 });
-      // user = generatedUsername = generate({ number: true }).dashed;
+      user = generatedUsername = generate({ number: true }).dashed;
       // roomName = generatedRoomName = generate({ number: false }).dashed;
       console.log(
         `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`

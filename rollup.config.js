@@ -64,7 +64,11 @@ export default {
 			})
 		],
 
-		onwarn,
+		onwarn: (warning, handler) => {
+      // console.log(`rollup.config.js CLIENT => onwarn, warning: ${warning}, ${warning.code}`)
+      if (warning == '(svelte plugin) Unused CSS selector') return;
+      handler(warning)
+    }
 	},
 
 	server: {

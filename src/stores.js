@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 
 let usernames = writable([])
+let ChatRooms = writable([])
 let thisUser = writable('sample user')
 let thisColor = writable('')
 let thisEmoji = writable('')
@@ -12,6 +13,14 @@ export const storeUsernames = {
   set: val => {
     usernames.set(val)
     localStorage.setItem('usernames', JSON.stringify(val))
+  }
+}
+
+export const storeChatRooms = {
+  subscribe: ChatRooms.subscribe,
+  set: val => {
+    ChatRooms.set(val)
+    localStorage.setItem('ChatRooms', JSON.stringify(val))
   }
 }
 
