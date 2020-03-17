@@ -16,7 +16,9 @@
     storeUsernames,
     storeThisUser,
     storeThisColor,
-    storeThisEmoji
+    storeThisEmoji,
+    storeRoomName,
+    storeChatUnderway
   } from "./../../stores.js";
   $: user = "";
   $: roomName = "";
@@ -111,13 +113,14 @@
       );
       emojiPicked = await emojis[rand];
       emojiPicker = new EmojiButton({ zIndex: 99 });
-      user = generatedUsername = generate({ number: true }).dashed;
-      roomName = generatedRoomName = generate({ number: false }).dashed;
+      // user = generatedUsername = generate({ number: true }).dashed;
+      // roomName = generatedRoomName = generate({ number: false }).dashed;
       console.log(
         `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`
       );
-      placeholderNameInit();
-      avatarInit();
+      console.log(`window object for location `, window.location)
+      // placeholderNameInit();
+      // avatarInit();
     }
 
     document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
@@ -479,11 +482,10 @@
 <svelte:window on:unload={emitUserDisconnect} />
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
-  <h1 class="u-text-center u-font-alt">Chatroom: {roomName}</h1>
+  <h1 class="u-text-center u-font-alt">Chatroom: {$storeRoomName}</h1>
 
   <div class="hero fullscreen">
     <r-grid columns="8">
-      {#if chatInitiated}
         <r-cell span="1-3">
           <div class="chat-container">
             <div class="user-info">
@@ -558,29 +560,6 @@
 
           </div>
         </r-cell>
-      {:else}
-        <r-cell span="row">
-          <h2 class="btn-info">Chatroom Joined</h2>
-          <div class="rooms-list">
-            {#each rooms as room}
-              <a href='/chat/{room.name}'>{room.name}</a>
-              <span>Num users: {room.numUsers}</span>
-            {/each}
-          </div>
-          <div class="btn-group chat-element chat-input-group">
-            <input
-              type="text"
-              id="room-name"
-              on:focus={onFocus}
-              bind:value={roomName}
-              placeholder="Please enter a name for your chat room" />
-
-            <button class="btn-info" id="send-message" on:click={startChat}>
-              Create Chatroom
-            </button>
-          </div>
-        </r-cell>
-      {/if}
     </r-grid>
   </div>
 </form>

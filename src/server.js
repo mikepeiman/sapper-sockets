@@ -60,7 +60,12 @@ io.sockets.on("connection", socket => {
       `\n******************************\nclients ${clients} number of ${clients.length}\n******************************\n`
     ); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
   });
-  socket.emit("rooms", rooms);
+
+  socket.on('joinRoom', room => {
+    rooms = [...rooms, room]
+    socket.emit("rooms", rooms);
+  })
+
   let cookie = socket.handshake.headers.cookie;
   cookie = cookie.slice(cookie.indexOf("=") + 1);
   // socket.join('chatlobby')

@@ -4,6 +4,8 @@ let usernames = writable([])
 let thisUser = writable('sample user')
 let thisColor = writable('')
 let thisEmoji = writable('')
+let RoomName = writable('')
+let ChatUnderway = writable(false)
 
 export const storeUsernames = {
   subscribe: usernames.subscribe,
@@ -35,5 +37,24 @@ export const storeThisEmoji = {
   set: val => {
     thisEmoji.set(val)
     localStorage.setItem('thisEmoji', JSON.stringify(val))
+  }
+}
+
+
+export const storeRoomName = {
+  subscribe: RoomName.subscribe,
+  set: val => {
+    RoomName.set(val)
+    localStorage.setItem('RoomName', JSON.stringify(val))
+  }
+}
+
+
+
+export const storeChatUnderway = {
+  subscribe: ChatUnderway.subscribe,
+  set: val => {
+    ChatUnderway.set(val)
+    localStorage.setItem('ChatUnderway', JSON.stringify(val))
   }
 }

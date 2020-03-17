@@ -16,7 +16,9 @@
     storeUsernames,
     storeThisUser,
     storeThisColor,
-    storeThisEmoji
+    storeThisEmoji,
+    storeRoomName,
+    storeChatUnderway
   } from "./../../stores.js";
   $: user = "";
   $: roomName = "";
@@ -243,11 +245,12 @@
     );
   }
 
-  function startChat() {
-    socket.emit("joinRoom", roomName);
-    socket.emit("chatroom initialized", roomName);
-
-    chatInitiated = true;
+  function joinRoom() {
+    socket.emit("joinRoom", {name: roomName, numUsers: 1});
+    storeRoomName.set(roomName)
+    // socket.emit("chatroom initialized", roomName);
+    // window.location.href = `/chat/${roomName}`
+    storeChatUnderway.set(true)
     rooms = [...rooms, roomName];
     // window.location.href += `#${roomName}`;
     socket.emit(
@@ -497,7 +500,7 @@
 
   <div class="hero fullscreen">
     <r-grid columns="8">
-      {#if chatInitiated}
+      {#if $storeChatUnderway}
         <r-cell span="1-3">
           <div class="chat-container">
             <div class="user-info">
@@ -577,7 +580,7 @@
           <h2 class="btn-info">Join Chatroom</h2>
           <div class="rooms-list">
             {#each rooms as room}
-              <a href="/chat/{room.name}">{room.name}</a>
+              <a href="/chat/{room.name}" on:click={joinRoom}>{room.name}</a>
               <span>Num users: {room.numUsers}</span>
             {/each}
           </div>
@@ -589,9 +592,9 @@
               bind:value={roomName}
               placeholder="Please enter a name for your chat room" />
 
-            <button class="btn-info" id="send-message" on:click={startChat}>
+            <a class="btn-info" href="/chat/{roomName}" id="send-message" on:click={joinRoom}>
               Create Chatroom
-            </button>
+            </a>
           </div>
         </r-cell>
       {/if}
