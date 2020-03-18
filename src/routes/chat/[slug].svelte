@@ -10,7 +10,7 @@
   import emojis from "emojis-list";
   // import Pickr from '@simonwep/pickr';
   // import '@simonwep/pickr/dist/themes/classic.min.css';
-  let socket = io();
+
   let initialized = false;
   import {
     storeUsernames,
@@ -21,7 +21,10 @@
     storeChatUnderway
   } from "./../../stores.js";
   $: user = "";
-  $: roomName = "";
+
+  let roomName = "";
+  let socket = io(`/${roomName}`);
+  $: roomName;
   let generatedUsername,
     placeholderName,
     avatar,
@@ -118,7 +121,7 @@
       console.log(
         `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`
       );
-      console.log(`window object for location `, window.location)
+      console.log(`window object for location `, window.location);
       // placeholderNameInit();
       // avatarInit();
     }
@@ -214,7 +217,8 @@
     if (currentMessage.length > 0) {
       let thisMsg = {
         username: user,
-        body: currentMessage
+        body: currentMessage,
+        room: $storeRoomName
       };
       messages = [...messages, thisMsg];
       socket.emit("message", thisMsg);
@@ -259,7 +263,7 @@
   }
 
   function typing() {
-    socket.emit("typing", user);
+    socket.emit("typing", user, $storeRoomName);
   }
 
   function emitUserDisconnect() {
@@ -486,80 +490,80 @@
 
   <div class="hero fullscreen">
     <r-grid columns="8">
-        <r-cell span="1-3">
-          <div class="chat-container">
-            <div class="user-info">
-              <div class="emoji-wrapper" width="50" height="50">
+      <r-cell span="1-3">
+        <div class="chat-container">
+          <div class="user-info">
+            <div class="emoji-wrapper" width="50" height="50">
+              {emojiPicked}
+            </div>
+            <h6>
+              Your username:
+              <span class="username">{user}</span>
+            </h6>
+          </div>
+          <div class="form-group chat-element">
+            <label class="form-group-label" on:click={togglePicker}>
+              <span class="icon user">
+                <!-- <i class="fa-wrapper far fa-user" /> -->
                 {emojiPicked}
-              </div>
-              <h6>
-                Your username:
-                <span class="username">{user}</span>
-              </h6>
-            </div>
-            <div class="form-group chat-element">
-              <label class="form-group-label" on:click={togglePicker}>
-                <span class="icon user">
-                  <!-- <i class="fa-wrapper far fa-user" /> -->
-                  {emojiPicked}
-                </span>
-              </label>
-              <label class="form-group-label">
-                <span
-                  class="icon palette color-picker"
-                  on:load={colorPickerInit()}>
-                  <!-- <i class="fa-wrapper fas fa-palette" /> -->
-                </span>
-              </label>
-              <input
-                id="username"
-                type="text"
-                class="form-group-input"
-                on:focus={onFocus}
-                on:blur={onBlur}
-                on:keypress={onKeypress}
-                bind:value={user} />
-              <label class="form-group-label">
-                <span class="icon checkmark">
-                  <i class="fa-wrapper fas fa-check" />
-                </span>
-              </label>
-            </div>
-
-          </div>
-          <div class="usernames-list">
-            {#each usernames as user}
-              <div>{user}</div>
-            {/each}
-          </div>
-          <div class="btn-group chat-element chat-input-group">
+              </span>
+            </label>
+            <label class="form-group-label">
+              <span
+                class="icon palette color-picker"
+                on:load={colorPickerInit()}>
+                <!-- <i class="fa-wrapper fas fa-palette" /> -->
+              </span>
+            </label>
             <input
+              id="username"
               type="text"
-              id="message"
-              bind:value={currentMessage}
-              on:keypress={typing}
-              placeholder="What's up?" />
-
-            <button class="btn-info" id="send-message">Send</button>
+              class="form-group-input"
+              on:focus={onFocus}
+              on:blur={onBlur}
+              on:keypress={onKeypress}
+              bind:value={user} />
+            <label class="form-group-label">
+              <span class="icon checkmark">
+                <i class="fa-wrapper fas fa-check" />
+              </span>
+            </label>
           </div>
-        </r-cell>
-        <r-cell span="4-8">
 
-          <div class="chat-window-group">
-            <div class="chat-element" id="chat-window">
-              <div id="feedback" />
-              <ul id="messages">
-                {#each messages as message}
-                  <li class="list-item" transition:fade>
-                    <div class="list-item-username">{message.username}:</div>
-                    <div class="list-item-message">{message.body}</div>
-                  </li>
-                {/each}
-              </ul>
-            </div>
+        </div>
+        <div class="usernames-list">
+          {#each usernames as user}
+            <div>{user}</div>
+          {/each}
+        </div>
+        <div class="btn-group chat-element chat-input-group">
+          <input
+            type="text"
+            id="message"
+            bind:value={currentMessage}
+            on:keypress={typing}
+            placeholder="What's up?" />
 
+          <button class="btn-info" id="send-message">Send</button>
+        </div>
+      </r-cell>
+      <r-cell span="4-8">
+
+        <div class="chat-window-group">
+          <div class="chat-element" id="chat-window">
+            <div id="feedback" />
+            <ul id="messages">
+              {#each messages as message}
+                <li class="list-item" transition:fade>
+                  <div class="list-item-username">{message.username}:</div>
+                  <div class="list-item-message">{message.body}</div>
+                </li>
+              {/each}
+            </ul>
           </div>
-        </r-cell>
+
+        </div>
+      </r-cell>
     </r-grid>
   </div>
 </form>

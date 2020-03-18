@@ -69,31 +69,11 @@
     console.log(`socket.on rooms in client, populate rooms array`, rooms);
   });
 
-  socket.on("error", msg => {
-    console.log(`Client receiving error: ${msg}`);
-  });
-  socket.on("success", msg => {
-    console.log(`Client receiving success: ${msg}`);
-  });
-  socket.on("message", message => {
-    messages = [...messages, message];
-    console.log(
-      `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
-    );
-    let feedback = document.querySelector("#feedback");
-    feedback.innerHTML = ``;
+    socket.on("rooms", data => {
+    rooms = data;
+    console.log(`socket.on rooms in client, populate rooms array`, rooms);
   });
 
-  socket.on("typing", username => {
-    console.log(`receiving a typing emission... logged from about.svelte`);
-    let feedback = document.querySelector("#feedback");
-    feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
-  });
-
-  socket.on("avatar returned", data => {
-    console.log(`on avatar returned to client, data `, data);
-    avatarSrc = data;
-  });
 
   socket.on("usernames", users => {
     usernames = users;
@@ -111,7 +91,7 @@
   });
 
   onMount(async () => {
-    localStorage.debug = "false";
+    // localStorage.debug = "false";
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
       let r1 = getRandomInt(0, 255);
@@ -131,6 +111,14 @@
       emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
       roomName = generatedRoomName = generate({ number: false }).dashed;
+      let chats = localStorage.getItem("ChatRooms")
+      if(chats.length){
+        chats = JSON.stringify(chats)
+        console.log(`Chat init onMount() => we have ChatRooms array length true ${chats.length}`)
+        chats.forEach(chatRoom => {
+          console.log(`each chatRoom as ${chatRoom.name}`)
+        })
+      }
       console.log(
         `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`
       );
@@ -289,6 +277,21 @@
       rooms
     );
   });
+
+    
+  socket.on("rooms updated", serverRooms => {
+    console.log(
+      `client index => socket.on('rooms updated') received rooms`,
+      serverRooms
+    );
+    rooms = serverRooms
+    storeChatRooms.set(serverRooms);
+    console.log(
+      `client index => socket.on('rooms updated') now rooms array: `,
+      rooms
+    );
+  });
+  
 
   function typing() {
     socket.emit("typing", user);

@@ -26,20 +26,27 @@ app.use(
 const io = new serverSocket(server);
 let users = [];
 let usernames = [];
-let rooms = [
-  { name: "CoolChatRoom", numUsers: 1 },
-  { name: "HotChatPlace", numUsers: 2 }
-];
+let rooms = [];
 let room = "";
 let i = 0;
 let previousClient = false;
 
-function getElByPropVal(myArray, prop, val) {
+function findIndexByAttr(myArray, prop, val) {
+  for (var i = 0, length = myArray.length; i < length; i++) {
+    if (myArray[i][prop] == val) {
+      return i;
+    }
+  }
+  return -1
+}
+
+function returnObjectByAttr(myArray, prop, val) {
   for (var i = 0, length = myArray.length; i < length; i++) {
     if (myArray[i][prop] == val) {
       return myArray[i];
     }
   }
+  return -1
 }
 // io.use((socket, next) => {
 //   if (socket.request.headers.cookie) {
@@ -62,7 +69,9 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("joinRoom", room => {
+    console.log(`socket.on joinRoom => count i ${i} room ${room}`, room)
     rooms = [...rooms, room];
+    socket.join(room.name);
     socket.broadcast.emit("rooms", rooms);
     socket.emit("rooms", rooms);
   });
@@ -86,9 +95,24 @@ io.sockets.on("connection", socket => {
   socket.on("room name", room => {
     // if (rooms.includes(room)) {
     console.log(`server.js => socket.on("room name"), room ${room} `, room);
-    socket.join(room.name);
-    socket.emit("room added", room);
-    socket.broadcast.emit("room added", room);
+    if(rooms.some(r => r.name === room.name)){
+      console.log(`${room.name} chatroom already exists`)
+      room.numUsers++
+      let idx = findIndexByAttr(rooms, 'name', room.name)
+      console.log(`${room.name} has numUsers ${room.numUsers} at index ${idx} as in array ${rooms[idx]}`, idx, rooms[idx])
+      rooms[idx] = room
+      rooms = rooms
+      socket.emit("rooms updated", rooms);
+      socket.broadcast.emit("rooms updated", rooms);
+    } else {
+      console.log(`${room.name} chatroom does not yet exist`)
+      rooms = [...rooms, room]
+      socket.emit("room added", room);
+      socket.broadcast.emit("room added", room);
+      socket.emit("rooms updated", rooms);
+      socket.broadcast.emit("rooms updated", rooms);
+    }
+
     // } else {
     // return socket.emit(
     //   "error",
@@ -159,12 +183,29 @@ io.sockets.on("connection", socket => {
     );
   });
 
-  socket.on("typing", username => {
-    socket.broadcast.emit("typing", username);
+  socket.on("typing", (user, room) => {
+    console.log(`server.js => on.'typing', user: ${user} room: `, room);
+    if (room) {
+      console.log(`on"typing" yes we havea  room ${room}`)
+      io.of(`${room}`).emit("typing", user);
+    } else {
+      console.log(`on"typing" no we have no room ${room}`)
+      socket.broadcast.emit("typing", user);
+    }
   });
 
   socket.on("message", message => {
-    socket.broadcast.emit("message", message);
+    console.log(
+      `server.js => on.'message', message: ${message.body} user: ${message.username} room: ${message.room} `,
+      room
+    );
+    if (room) {
+      console.log(`on"message" yes we havea  room ${room}`)
+      io.of(`${room}`).emit("message", message);
+    } else {
+      console.log(`on"message" no we have no room ${room}`)
+      socket.broadcast.emit("message", message);
+    }
   });
 
   socket.on("disconnect", reason => {
