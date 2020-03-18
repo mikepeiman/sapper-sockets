@@ -33,13 +33,17 @@
     emojiPicked,
     emojiPicker,
     currentColor,
+    color1,
+    color2,
+    gradientDegrees1,
+    gradientDegrees2,
     usernames = [],
     rooms = [],
     generatedRoomName,
     chatInitiated = false;
 
-  $: bg1 = `linear-gradient(00deg, rgba(255,25,255,0.25), ${currentColor})`;
-  $: bg2 = `linear-gradient(-240deg, ${currentColor}, rgba(25,155,255,0.35))`;
+  $: bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
+  $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1},${color2})`;
 
   $: {
     if (typeof window !== "undefined") {
@@ -111,6 +115,16 @@
     localStorage.debug = "false";
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
+      let r1 = getRandomInt(0, 255);
+      let g1 = getRandomInt(0, 255);
+      let b1 = getRandomInt(0, 255);
+      color1 = `rgba(${r1}, ${g1},${b1},0.25)`;
+      let r2 = getRandomInt(0, 255);
+      let g2 = getRandomInt(0, 255);
+      let b2 = getRandomInt(0, 255);
+      color2 = `rgba(${r2}, ${g2},${b2},0.25)`;
+      gradientDegrees1 = getRandomInt(0, 360);
+      gradientDegrees2 = getRandomInt(0, -360);
       console.log(
         `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
       );
@@ -130,7 +144,9 @@
     document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
     let sapper = document.querySelector("#sapper");
     sapper.classList.toggle("transition");
-
+    if (checkIsUserNameValid(user)) {
+      updateUserName();
+    }
     initialized = true;
   });
 
@@ -221,7 +237,7 @@
         room: $storeRoomName
       };
       messages = [...messages, thisMsg];
-      socket.emit("message", thisMsg);
+      socket.emit("chat message", thisMsg);
     }
     if (user !== socket.username) {
       console.log(

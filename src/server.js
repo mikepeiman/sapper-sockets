@@ -194,13 +194,13 @@ io.sockets.on("connection", socket => {
     }
   });
 
-  socket.on("message", message => {
+  socket.on("chat message", message => {
     console.log(
       `server.js => on.'message', message: ${message.body} user: ${message.username} room: ${message.room} `,
       room
     );
     if (room) {
-      console.log(`on"message" yes we havea  room ${room}`)
+      console.log(`on"message" yes we have a room ${room}`)
       io.of(`${room}`).emit("message", message);
     } else {
       console.log(`on"message" no we have no room ${room}`)
