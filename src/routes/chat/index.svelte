@@ -47,7 +47,8 @@
     if (typeof window !== "undefined") {
       window.addEventListener("beforeunload", e => {
         console.log(
-          `Window about to unload, current client data is username ${user} color ${color1} emoji ${emojiPicked}`
+          `Window about to unload, current client data is username ${user} color ${color1} emoji ${emojiPicked} usernames `,
+          usernames
         );
         storeThisColor.set(color1);
         storeThisEmoji.set(emojiPicked);
@@ -69,11 +70,10 @@
     console.log(`socket.on rooms in client, populate rooms array`, rooms);
   });
 
-    socket.on("rooms", data => {
+  socket.on("rooms", data => {
     rooms = data;
     console.log(`socket.on rooms in client, populate rooms array`, rooms);
   });
-
 
   socket.on("usernames", users => {
     usernames = users;
@@ -111,13 +111,15 @@
       emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
       roomName = generatedRoomName = generate({ number: false }).dashed;
-      let chats = localStorage.getItem("ChatRooms")
-      if(chats.length){
-        chats = JSON.stringify(chats)
-        console.log(`Chat init onMount() => we have ChatRooms array length true ${chats.length}`)
+      let chats = localStorage.getItem("ChatRooms");
+      if (chats.length) {
+        chats = JSON.parse(chats);
+        console.log(
+          `Chat init onMount() => we have ChatRooms array length true ${chats.length}`
+        );
         chats.forEach(chatRoom => {
-          console.log(`each chatRoom as ${chatRoom.name}`)
-        })
+          console.log(`each chatRoom as ${chatRoom.name}`);
+        });
       }
       console.log(
         `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`
@@ -239,7 +241,7 @@
     console.log(`client index => joinRoom() called to join ${thisRoom}`);
     room = { name: thisRoom, numUsers: 1 };
     socket.emit("room name", room);
-    socket.join(thisRoom)
+    socket.join(thisRoom);
     storeRoomName.set(thisRoom);
     // socket.emit("chatroom initialized", roomName);
     // window.location.href = `/chat/${roomName}`
@@ -280,20 +282,18 @@
     );
   });
 
-    
   socket.on("rooms updated", serverRooms => {
     console.log(
       `client index => socket.on('rooms updated') received rooms`,
       serverRooms
     );
-    rooms = serverRooms
+    rooms = serverRooms;
     storeChatRooms.set(serverRooms);
     console.log(
       `client index => socket.on('rooms updated') now rooms array: `,
       rooms
     );
   });
-  
 
   function typing() {
     socket.emit("typing", user);
@@ -511,6 +511,50 @@
       background: rgba(205, 255, 255, 0.5);
     }
   }
+
+  ul.chatroom {
+    display: flex;
+    list-style: none;
+    justify-content: flex-start;
+    align-items: center;
+    border: 5px solid rgba(55, 155, 255, 0.75);
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: #333;
+    & a {
+      margin-right: 1rem;
+    }
+    & span {
+    }
+    & r-grid {
+      padding: 0;
+      margin: 0;
+      grid-column-gap: 0;
+      grid-row-gap: 0;
+      width: 100%;
+    }
+    & .table-wrapper {
+      width: 100%;
+    }
+    & .chatroom-name {
+      justify-self: flex-start;
+      padding: 0 1rem;
+      border-left: 5px solid rgba(55, 155, 255, 0.75);
+      border-right: 5px solid rgba(55, 155, 255, 0.75);
+    }
+    & .chatroom-numusers {
+      justify-self: flex-end;
+      padding: 0 1rem;
+      border-left: 5px solid rgba(55, 155, 255, 0.75);
+      border-right: 5px solid rgba(55, 155, 255, 0.75);
+    }
+    & .table-heading {
+      text-transform: uppercase;
+      font-weight: 400;
+      color: white;
+    }
+  }
 </style>
 
 <svelte:head>
@@ -526,12 +570,24 @@
       <r-cell span="row">
         <h2 class="btn-info">Join Chatroom</h2>
         <div class="rooms-list">
-          {#each rooms as room}
-            <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
-              {room.name}
-            </a>
-            <span>Num users: {room.numUsers}</span>
-          {/each}
+          <ul class="chatroom">
+            <r-grid columns="8" class="table-wrapper">
+              <r-cell span="1-6" class="table-heading chatroom-name">
+                Room Name
+              </r-cell>
+              <r-cell span="7-8" class="table-heading chatroom-numusers">
+                Participants
+              </r-cell>
+              {#each rooms as room}
+                <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
+                  <r-cell span="1-7" class="chatroom-name">{room.name}</r-cell>
+                </a>
+                <r-cell span="8" class="chatroom-numusers">
+                  Num users: {room.numUsers}
+                </r-cell>
+              {/each}
+            </r-grid>
+          </ul>
         </div>
         <div class="btn-group chat-element chat-input-group">
           <input
