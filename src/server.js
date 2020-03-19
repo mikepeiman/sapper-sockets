@@ -121,9 +121,9 @@ io.sockets.on("connection", socket => {
     // }
   });
 
-  socket.on("chat room loaded", (data, userNameExists) => {
+  socket.on("chat room loaded", (roomName, data, userNameExists) => {
     console.log(
-      `client ${socket.id} loaded \n   name: ${data.user} \n   emoji ${data.emoji} \n   color ${data.color}`
+      `server.js => room ${roomName} socket.id ${socket.id} loaded \n   name: ${data.user} \n   emoji ${data.emoji} \n   color ${data.color}`
     );
     i++;
 
@@ -186,8 +186,9 @@ io.sockets.on("connection", socket => {
   socket.on("typing", (user, room) => {
     console.log(`server.js => on.'typing', user: ${user} room: `, room);
     if (room) {
-      console.log(`on"typing" yes we havea  room ${room}`)
-      io.of(`${room}`).emit("typing", user);
+      console.log(`on"typing" yes we have a room ${room}`)
+      // io.sockets.in('/'+room).emit("typing", user);
+      io.to(room).emit("typing", user);
     } else {
       console.log(`on"typing" no we have no room ${room}`)
       socket.broadcast.emit("typing", user);
@@ -199,12 +200,13 @@ io.sockets.on("connection", socket => {
       `server.js => on.'message', message: ${message.body} user: ${message.username} room: ${message.room} `,
       room
     );
-    if (room) {
+    if (message.room) {
       console.log(`on"message" yes we have a room ${room}`)
-      io.of(`${room}`).emit("message", message);
+      io.to(room).emit("broadcast message", message);
+      // io.sockets.in('/'+room).emit("broadcast message", message);
     } else {
       console.log(`on"message" no we have no room ${room}`)
-      socket.broadcast.emit("message", message);
+      socket.broadcast.emit("broadcast message", message);
     }
   });
 

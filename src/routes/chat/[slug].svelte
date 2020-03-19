@@ -23,7 +23,7 @@
   $: user = "";
 
   let roomName = "";
-  let socket = io(`/${roomName}`);
+  let socket = io();
   $: roomName;
   let generatedUsername,
     placeholderName,
@@ -73,13 +73,15 @@
   socket.on("error", msg => {
     console.log(`Client receiving error: ${msg}`);
   });
+
   socket.on("success", msg => {
     console.log(`Client receiving success: ${msg}`);
   });
-  socket.on("message", message => {
+
+  socket.on("broadcast message", message => {
     messages = [...messages, message];
     console.log(
-      `client ${socket.id} received a message broadcast, ${message.username}: ${message.body}`
+      `\nclient ${socket.id} received a message broadcast, ${message.username}: ${message.body}\n`
     );
     let feedback = document.querySelector("#feedback");
     feedback.innerHTML = ``;
@@ -252,32 +254,6 @@
     );
   }
 
-  function startChat() {
-    socket.emit("joinRoom", roomName);
-    socket.emit("chatroom initialized", roomName);
-
-    chatInitiated = true;
-    rooms = [...rooms, roomName];
-    // window.location.href += `#${roomName}`;
-    socket.emit(
-      "client loaded",
-      { user: user, color: currentColor, emoji: emojiPicked },
-      userNameExists => {
-        if (!userNameExists) {
-          socket.username = user;
-          storeThisUser.set(user);
-          console.log(
-            `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
-          );
-        } else {
-          console.log(
-            `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
-          );
-        }
-      }
-    );
-  }
-
   function typing() {
     socket.emit("typing", user, $storeRoomName);
   }
@@ -310,10 +286,10 @@
 
   function checkIsUserNameValid(str) {
     if (usernames.indexOf(str) == -1) {
-      console.log(`checkIsUserNameValid returns true (unique) for ${str}`);
+      console.log(`checkIsUserNameValid returns true (unique) for ${str}`, usernames);
       return true;
     } else {
-      console.log(`checkIsUserNameValid returns false (duplicate) for ${str}`);
+      console.log(`checkIsUserNameValid returns false (duplicate) for ${str}`, usernames);
       return false;
     }
   }

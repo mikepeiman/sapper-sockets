@@ -239,6 +239,7 @@
     console.log(`client index => joinRoom() called to join ${thisRoom}`);
     room = { name: thisRoom, numUsers: 1 };
     socket.emit("room name", room);
+    socket.join(thisRoom)
     storeRoomName.set(thisRoom);
     // socket.emit("chatroom initialized", roomName);
     // window.location.href = `/chat/${roomName}`
@@ -248,6 +249,7 @@
     // window.location.href += `#${roomName}`;
     socket.emit(
       "chat room loaded",
+      thisRoom,
       { user: user, color: color1, emoji: emojiPicked },
       userNameExists => {
         if (!userNameExists) {
