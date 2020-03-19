@@ -502,18 +502,9 @@
     border-radius: 3px;
   }
 
-  .rooms-list {
-    display: flex;
-    flex-direction: column;
-    & a {
-      padding: 0.5rem;
-      border-radius: 3px;
-      background: rgba(205, 255, 255, 0.5);
-    }
-  }
-
   ul.chatroom {
     display: flex;
+    flex-direction: column;
     list-style: none;
     justify-content: flex-start;
     align-items: center;
@@ -522,6 +513,14 @@
     padding: 0;
     width: 100%;
     background: #333;
+    color: white;
+    & .chatroom-row {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+    }
     & a {
       margin-right: 1rem;
     }
@@ -539,20 +538,26 @@
     }
     & .chatroom-name {
       justify-self: flex-start;
+      color: white;
       padding: 0 1rem;
-      border-left: 5px solid rgba(55, 155, 255, 0.75);
-      border-right: 5px solid rgba(55, 155, 255, 0.75);
+      // border-left: 5px solid rgba(55, 155, 255, 0.75);
+      // border-right: 5px solid rgba(55, 155, 255, 0.75);
     }
     & .chatroom-numusers {
       justify-self: flex-end;
       padding: 0 1rem;
-      border-left: 5px solid rgba(55, 155, 255, 0.75);
-      border-right: 5px solid rgba(55, 155, 255, 0.75);
+      // border-left: 5px solid rgba(55, 155, 255, 0.75);
+      // border-right: 5px solid rgba(55, 155, 255, 0.75);
     }
     & .table-heading {
       text-transform: uppercase;
       font-weight: 400;
       color: white;
+      padding: 0.5rem;
+      border-bottom: 1px solid rgba(55, 155, 255, 0.75);
+    }
+    & .chatroom-item {
+      background: rgba(0, 155, 255, 0.1);
     }
   }
 </style>
@@ -568,25 +573,29 @@
   <div class="hero fullscreen">
     <r-grid columns="8">
       <r-cell span="row">
-        <h2 class="btn-info">Join Chatroom</h2>
+
         <div class="rooms-list">
-          <ul class="chatroom">
-            <r-grid columns="8" class="table-wrapper">
-              <r-cell span="1-6" class="table-heading chatroom-name">
-                Room Name
-              </r-cell>
-              <r-cell span="7-8" class="table-heading chatroom-numusers">
-                Participants
-              </r-cell>
-              {#each rooms as room}
-                <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
-                  <r-cell span="1-7" class="chatroom-name">{room.name}</r-cell>
-                </a>
-                <r-cell span="8" class="chatroom-numusers">
-                  Num users: {room.numUsers}
-                </r-cell>
-              {/each}
-            </r-grid>
+          <h2 class="btn-info">Join Chatroom</h2>
+          <ul class="chatroom table-wrapper">
+            <li class="chatroom-row table-heading">
+              <div class="chatroom-name">Room Name</div>
+              <div class="chatroom-numusers">Participants</div>
+            </li>
+            {#each rooms as room}
+              <!-- <r-grid columns="8" class="chatroom-item"> -->
+              <li class="chatroom-row">
+                <div span="1-6" class="chatroom-name">
+                  <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
+                    {room.name}
+                  </a>
+                </div>
+                <div span="7-8" class="chatroom-numusers">
+                  {room.numUsers}
+                </div>
+              </li>
+              <!-- </r-grid> -->
+            {/each}
+            <!-- </div> -->
           </ul>
         </div>
         <div class="btn-group chat-element chat-input-group">
