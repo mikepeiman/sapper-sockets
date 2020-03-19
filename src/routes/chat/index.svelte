@@ -502,6 +502,13 @@
     border-radius: 3px;
   }
 
+  .rooms-list {
+    & h2 {
+      margin: 0;
+      padding: 0;
+    }
+  }
+
   ul.chatroom {
     display: flex;
     flex-direction: column;
@@ -560,6 +567,29 @@
       background: rgba(0, 155, 255, 0.1);
     }
   }
+  
+  .chat-input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    & input {
+    width: 80%;
+    border: none;
+    outline: 0;
+    }
+
+    &   #send-message {
+    border-radius: 0 0 3px 3px;
+    justify-self: flex-end;
+    align-self: stretch;
+    width: 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+  }
 </style>
 
 <svelte:head>
@@ -568,14 +598,14 @@
 <svelte:window on:unload={emitUserDisconnect} />
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
-  <h1 class="u-text-center u-font-alt">Chatroom: {roomName}</h1>
+  <!-- <h1 class="u-text-center u-font-alt">Chatroom: {roomName}</h1> -->
 
   <div class="hero fullscreen">
     <r-grid columns="8">
       <r-cell span="row">
 
         <div class="rooms-list">
-          <h2 class="btn-info">Join Chatroom</h2>
+          <h2 class="chatroom-heading">Join Chatroom</h2>
           <ul class="chatroom table-wrapper">
             <li class="chatroom-row table-heading">
               <div class="chatroom-name">Room Name</div>
@@ -589,16 +619,17 @@
                     {room.name}
                   </a>
                 </div>
-                <div span="7-8" class="chatroom-numusers">
-                  {room.numUsers}
-                </div>
+                <div span="7-8" class="chatroom-numusers">{room.numUsers}</div>
               </li>
               <!-- </r-grid> -->
             {/each}
             <!-- </div> -->
           </ul>
         </div>
+        <hr />
+        <h2 class="chatroom-heading">Create Chatroom</h2>
         <div class="btn-group chat-element chat-input-group">
+
           <input
             type="text"
             id="room-name"
