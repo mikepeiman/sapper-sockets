@@ -8,6 +8,10 @@
   import generate from "project-name-generator";
   import EmojiButton from "@joeattardi/emoji-button";
   import emojis from "emojis-list";
+
+	import { stores } from '@sapper/app';
+	const { preloading, page, session } = stores();
+
   // import Pickr from '@simonwep/pickr';
   // import '@simonwep/pickr/dist/themes/classic.min.css';
   let socket = io();
@@ -21,9 +25,7 @@
     storeRoomName,
     storeChatUnderway
   } from "./../../stores.js";
-  $: user = "";
-  $: roomName = "";
-  $: rooms = [];
+
   let generatedUsername,
     placeholderName,
     avatar,
@@ -37,23 +39,37 @@
     gradientDegrees2,
     usernames = [],
     room = {},
+    rooms = [],
     generatedRoomName,
     chatInitiated = false;
 
+  $: user = "";
+  $: roomName = "";
+  $: {
+    if (typeof window !== "undefined") {
+      rooms = JSON.parse(localStorage.getItem("ChatRooms"));
+    } else {
+      rooms = [];
+    }
+  }
   $: bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
-  $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1},${color2})`;
+  $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1}, ${color2})`;
 
   $: {
     if (typeof window !== "undefined") {
+      console.log(
+        `reactive window check on client, chat index, window location `,
+        window.location
+      );
       window.addEventListener("beforeunload", e => {
         console.log(
           `Window about to unload, current client data is username ${user} color ${color1} emoji ${emojiPicked} usernames `,
           usernames
         );
-        storeThisColor.set(color1);
-        storeThisEmoji.set(emojiPicked);
-        storeThisUser.set(user);
-        storeUsernames.set(usernames);
+        // storeThisColor.set(color1);
+        // storeThisEmoji.set(emojiPicked);
+        // storeThisUser.set(user);
+        // storeUsernames.set(usernames);
       });
 
       document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
@@ -91,17 +107,22 @@
   });
 
   onMount(async () => {
+    console.log(
+      `onMount check on client, chat index, window location `,
+      window.location
+    );
+    console.log(`chat.index => onMount() session from Sapper stores: `, session)
     // localStorage.debug = "false";
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
       let r1 = getRandomInt(0, 255);
       let g1 = getRandomInt(0, 255);
       let b1 = getRandomInt(0, 255);
-      color1 = `rgba(${r1}, ${g1},${b1},0.25)`;
+      color1 = `rgba(${r1}, ${g1},${b1},0.45)`;
       let r2 = getRandomInt(0, 255);
       let g2 = getRandomInt(0, 255);
       let b2 = getRandomInt(0, 255);
-      color2 = `rgba(${r2}, ${g2},${b2},0.25)`;
+      color2 = `rgba(${r2}, ${g2},${b2},0.45)`;
       gradientDegrees1 = getRandomInt(0, 360);
       gradientDegrees2 = getRandomInt(0, -360);
       console.log(
@@ -239,9 +260,9 @@
 
   function joinRoom(thisRoom) {
     console.log(`client index => joinRoom() called to join ${thisRoom}`);
-    room = { name: thisRoom, numUsers: 1 };
-    socket.emit("room name", room);
-    socket.join(thisRoom);
+    room = { name: thisRoom, numUsers: 0 };
+    socket.emit("join room", room, user);
+
     storeRoomName.set(thisRoom);
     // socket.emit("chatroom initialized", roomName);
     // window.location.href = `/chat/${roomName}`
@@ -249,38 +270,25 @@
     // rooms = [...rooms, room];
     storeChatRooms.set(rooms);
     // window.location.href += `#${roomName}`;
-    socket.emit(
-      "chat room loaded",
-      thisRoom,
-      { user: user, color: color1, emoji: emojiPicked },
-      userNameExists => {
-        if (!userNameExists) {
-          socket.username = user;
-          storeThisUser.set(user);
-          console.log(
-            `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
-          );
-        } else {
-          console.log(
-            `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
-          );
-        }
-      }
-    );
+    // socket.emit(
+    //   "chat room loaded",
+    //   thisRoom,
+    //   { user: user, color: color1, emoji: emojiPicked },
+    //   userNameExists => {
+    //     if (!userNameExists) {
+    //       socket.username = user;
+    //       storeThisUser.set(user);
+    //       console.log(
+    //         `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
+    //       );
+    //     } else {
+    //       console.log(
+    //         `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
+    //       );
+    //     }
+    //   }
+    // );
   }
-
-  socket.on("room added", room => {
-    console.log(
-      `client index => socket.on('room added') received room ${room.name}`,
-      room
-    );
-    rooms = [...rooms, room];
-    storeChatRooms.set(rooms);
-    console.log(
-      `client index => socket.on('room added') now rooms array: `,
-      rooms
-    );
-  });
 
   socket.on("rooms updated", serverRooms => {
     console.log(
@@ -567,7 +575,7 @@
       background: rgba(0, 155, 255, 0.1);
     }
   }
-  
+
   .chat-input-group {
     width: 100%;
     display: flex;
@@ -575,20 +583,20 @@
     justify-content: space-between;
 
     & input {
-    width: 80%;
-    border: none;
-    outline: 0;
+      width: 80%;
+      border: none;
+      outline: 0;
     }
 
-    &   #send-message {
-    border-radius: 0 0 3px 3px;
-    justify-self: flex-end;
-    align-self: stretch;
-    width: 20%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+    & #send-message {
+      border-radius: 0 0 3px 3px;
+      justify-self: flex-end;
+      align-self: stretch;
+      width: 20%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   }
 </style>
 

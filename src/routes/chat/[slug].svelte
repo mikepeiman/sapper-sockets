@@ -3,7 +3,7 @@
     messages = [];
   // import * as chat from './../chat.js'
   import { fade } from "svelte/transition";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import io from "socket.io-client";
   import generate from "project-name-generator";
   import EmojiButton from "@joeattardi/emoji-button";
@@ -39,6 +39,7 @@
     gradientDegrees2,
     usernames = [],
     rooms = [],
+    room = '',
     generatedRoomName,
     chatInitiated = false;
 
@@ -47,6 +48,10 @@
 
   $: {
     if (typeof window !== "undefined") {
+      console.log(`chat[slug] window.location now: ${window.location}`);
+      // extract the chatroom name from window location
+      // get the chatrooms from server - emit an event that returns the data in a callback
+      // increment the number of users in this chatroom and emit an event to update on the server, including with username
       window.addEventListener("beforeunload", e => {
         console.log(
           `Window about to unload, current client data is username ${user} color ${currentColor} emoji ${emojiPicked}`
@@ -114,6 +119,20 @@
   });
 
   onMount(async () => {
+    let url = window.location.href;
+    console.log(`url from window.location ${url}`);
+    let str = url.split('chat/')
+    console.log(`string split from 'chat' ${str}`)
+    str.forEach((part, i) => {
+      console.log(`string part :: ${part} :: and idnex ${i}`)
+    })
+    let derivedRoomName = str[1]
+    console.log(
+      `url from window.location ${url} sliced into ${derivedRoomName}`
+    );
+    room = str[1]
+    roomName = str[1]
+    socket.emit('joined room', user, room)
     localStorage.debug = "false";
     if (!initialized) {
       let rand = getRandomInt(0, emojis.length);
@@ -151,6 +170,11 @@
     }
     initialized = true;
   });
+
+  onDestroy(() => {
+    console.log(`chatroom ${roomName} called onDestroy(), user ${user} left`)
+        socket.emit("left chatroom", roomName, user);
+  })
 
   function colorPickerInit() {
     const pickr = Pickr.create({
@@ -258,10 +282,6 @@
     socket.emit("typing", user, $storeRoomName);
   }
 
-  function emitUserDisconnect() {
-    // socket.emit("disconnected");
-  }
-
   function placeholderNameInit() {
     // generatedUsername = generate({ number: true }).dashed;
     console.log(`placeholderName: user ${user} generated ${generatedUsername}`);
@@ -286,10 +306,16 @@
 
   function checkIsUserNameValid(str) {
     if (usernames.indexOf(str) == -1) {
-      console.log(`checkIsUserNameValid returns true (unique) for ${str}`, usernames);
+      console.log(
+        `checkIsUserNameValid returns true (unique) for ${str}`,
+        usernames
+      );
       return true;
     } else {
-      console.log(`checkIsUserNameValid returns false (duplicate) for ${str}`, usernames);
+      console.log(
+        `checkIsUserNameValid returns false (duplicate) for ${str}`,
+        usernames
+      );
       return false;
     }
   }
@@ -475,10 +501,9 @@
 <svelte:head>
   <title>Chatroom: {roomName}</title>
 </svelte:head>
-<svelte:window on:unload={emitUserDisconnect} />
 
 <form class="frame" method="post" on:submit|preventDefault={submitMsg}>
-  <h1 class="u-text-center u-font-alt">Chatroom: {$storeRoomName}</h1>
+  <h1 class="u-text-center u-font-alt">Chatroom: {roomName}</h1>
 
   <div class="hero fullscreen">
     <r-grid columns="8">
