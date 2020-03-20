@@ -66,7 +66,7 @@
       if (chats) {
         chats = JSON.parse(chats);
         if (chats.length) {
-          console.log(`chats exists in ls `, chats)
+          console.log(`chat index => onMount => ChatRooms exists in ls `, chats);
           roomsExist = true;
           console.log(
             `Chat init onMount() => we have ChatRooms array length true ${chats.length}`
@@ -222,16 +222,15 @@
   }
 
   socket.on("rooms updated", serverRooms => {
-    console.log(
-      `client index => socket.on('rooms updated') received rooms`,
-      serverRooms
-    );
     rooms = serverRooms;
     storeChatRooms.set(serverRooms);
     console.log(
       `client index => socket.on('rooms updated') now rooms array: `,
       rooms
     );
+    if(rooms.length > 0){
+      roomsExist = true;
+    }
   });
 
   function typing() {
@@ -255,7 +254,6 @@
       return (placeholderName = user);
     }
   }
-
 
   function onFocus(e) {
     e.target.select();
@@ -542,29 +540,33 @@
 
         <div class="rooms-list">
           <h2 class="chatroom-heading">Join Chatroom</h2>
+          <span>roomsExist: {roomsExist}</span>
           <ul class="chatroom table-wrapper">
             <li class="chatroom-row table-heading">
               <div class="chatroom-name">Room Name</div>
               <div class="chatroom-numusers">Participants</div>
             </li>
-            {#each rooms as room}
-              <!-- <r-grid columns="8" class="chatroom-item"> -->
+            {#if roomsExist == false}
               <li class="chatroom-row">
                 <div span="1-6" class="chatroom-name">
-
-                  {#if roomsExist}
+                  <a href="/chat">There are no chat rooms currently active</a>
+                </div>
+              </li>
+            {:else}
+              {#each rooms as room}
+                <!-- <r-grid columns="8" class="chatroom-item"> -->
+                <li class="chatroom-row">
+                  <div span="1-6" class="chatroom-name">
                     <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
                       {room.name}
                     </a>
-                  {:else}
-                    <a href="/chat">There are no chat rooms currently active</a>
-                  {/if}
-                </div>
-                <div span="7-8" class="chatroom-numusers">{room.numUsers}</div>
-              </li>
-              <!-- </r-grid> -->
-            {/each}
-            <!-- </div> -->
+                  </div>
+                  <div span="7-8" class="chatroom-numusers">
+                    {room.numUsers}
+                  </div>
+                </li>
+              {/each}
+            {/if}
           </ul>
         </div>
         <hr />
