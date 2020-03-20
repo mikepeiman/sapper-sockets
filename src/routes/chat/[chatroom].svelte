@@ -46,41 +46,12 @@
   $: bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
   $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1},${color2})`;
 
-  $: {
-    if (typeof window !== "undefined") {
-      console.log(`chat[slug] window.location now: ${window.location}`);
-      // extract the chatroom name from window location
-      // get the chatrooms from server - emit an event that returns the data in a callback
-      // increment the number of users in this chatroom and emit an event to update on the server, including with username
-      window.addEventListener("beforeunload", e => {
-        console.log(
-          `Window about to unload, current client data is username ${user} color ${currentColor} emoji ${emojiPicked}`
-        );
-        storeThisColor.set(currentColor);
-        storeThisEmoji.set(emojiPicked);
-        storeThisUser.set(user);
-        storeUsernames.set(usernames);
-      });
-
-      document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
-      document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
-    }
-  }
-
   emojiPicked = "...";
   currentColor = "rgba(255,25,255,0.35)";
 
   socket.on("rooms", data => {
     rooms = data;
     console.log(`socket.on rooms in client, populate rooms array`, rooms);
-  });
-
-  socket.on("error", msg => {
-    console.log(`Client receiving error: ${msg}`);
-  });
-
-  socket.on("success", msg => {
-    console.log(`Client receiving success: ${msg}`);
   });
 
   socket.on("broadcast message", message => {
@@ -96,11 +67,6 @@
     console.log(`receiving a typing emission... logged from about.svelte`);
     let feedback = document.querySelector("#feedback");
     feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
-  });
-
-  socket.on("avatar returned", data => {
-    console.log(`on avatar returned to client, data `, data);
-    avatarSrc = data;
   });
 
   socket.on("usernames", users => {
@@ -119,37 +85,14 @@
   });
 
   onMount(async () => {
+    generateRandomColors()
+    generateRandomEmoji()
     let url = window.location.href;
-    console.log(`url from window.location ${url}`);
     let str = url.split('chat/')
-    console.log(`string split from 'chat' ${str}`)
-    str.forEach((part, i) => {
-      console.log(`string part :: ${part} :: and idnex ${i}`)
-    })
-    let derivedRoomName = str[1]
-    console.log(
-      `url from window.location ${url} sliced into ${derivedRoomName}`
-    );
-    room = str[1]
     roomName = str[1]
-    socket.emit('joined room', user, room)
+    socket.emit('joined room', user, roomName)
     localStorage.debug = "false";
     if (!initialized) {
-      let rand = getRandomInt(0, emojis.length);
-      let r1 = getRandomInt(0, 255);
-      let g1 = getRandomInt(0, 255);
-      let b1 = getRandomInt(0, 255);
-      color1 = `rgba(${r1}, ${g1},${b1},0.25)`;
-      let r2 = getRandomInt(0, 255);
-      let g2 = getRandomInt(0, 255);
-      let b2 = getRandomInt(0, 255);
-      color2 = `rgba(${r2}, ${g2},${b2},0.25)`;
-      gradientDegrees1 = getRandomInt(0, 360);
-      gradientDegrees2 = getRandomInt(0, -360);
-      console.log(
-        `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
-      );
-      emojiPicked = await emojis[rand];
       emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
       // roomName = generatedRoomName = generate({ number: false }).dashed;
@@ -175,6 +118,26 @@
     console.log(`chatroom ${roomName} called onDestroy(), user ${user} left`)
         socket.emit("left chatroom", roomName, user);
   })
+
+    function generateRandomColors() {
+    let r1 = getRandomInt(0, 255);
+    let g1 = getRandomInt(0, 255);
+    let b1 = getRandomInt(0, 255);
+    color1 = `rgba(${r1}, ${g1},${b1},0.45)`;
+    let r2 = getRandomInt(0, 255);
+    let g2 = getRandomInt(0, 255);
+    let b2 = getRandomInt(0, 255);
+    color2 = `rgba(${r2}, ${g2},${b2},0.45)`;
+    gradientDegrees1 = getRandomInt(0, 360);
+    gradientDegrees2 = getRandomInt(0, -360);
+    bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
+    bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1}, ${color2})`;
+  }
+
+  async function generateRandomEmoji() {
+    let rand = getRandomInt(0, emojis.length);
+    emojiPicked = await emojis[rand];
+  }
 
   function colorPickerInit() {
     const pickr = Pickr.create({

@@ -6,9 +6,6 @@
   import { onMount } from "svelte";
   import io from "socket.io-client";
   import generate from "project-name-generator";
-  import EmojiButton from "@joeattardi/emoji-button";
-  import emojis from "emojis-list";
-
   import { stores } from "@sapper/app";
   const { preloading, page, session } = stores();
 
@@ -28,11 +25,6 @@
 
   let generatedUsername,
     placeholderName,
-    avatar,
-    avatarUrl,
-    avatarSrc,
-    emojiPicked,
-    emojiPicker,
     color1,
     color2,
     gradientDegrees1,
@@ -47,7 +39,6 @@
   $: user = "";
   $: roomName = "";
 
-  emojiPicked = "...";
   color1 = "rgba(255,25,255,0.35)";
   color2 = "rgba(25,255,255,0.35)";
   gradientDegrees1 = 60;
@@ -58,15 +49,16 @@
   onMount(async () => {
     generateRandomColors();
     if (!initialized) {
-      generateRandomEmoji();
-      emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
       roomName = generatedRoomName = generate({ number: false }).dashed;
       let chats = localStorage.getItem("ChatRooms");
       if (chats) {
         chats = JSON.parse(chats);
         if (chats.length) {
-          console.log(`chat index => onMount => ChatRooms exists in ls `, chats);
+          console.log(
+            `chat index => onMount => ChatRooms exists in ls `,
+            chats
+          );
           roomsExist = true;
           console.log(
             `Chat init onMount() => we have ChatRooms array length true ${chats.length}`
@@ -104,11 +96,6 @@
     gradientDegrees2 = getRandomInt(0, -360);
     bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
     bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1}, ${color2})`;
-  }
-
-  async function generateRandomEmoji() {
-    let rand = getRandomInt(0, emojis.length);
-    emojiPicked = await emojis[rand];
   }
 
   function colorPickerInit() {
@@ -203,7 +190,7 @@
       console.log(
         `submitMsg function inside about.svelte ${socket.username} does not equal current username ${user} (no message: ${currentMessage})`
       );
-      if (checkIsUserNameValid(user)) {
+      if (checkIsUserNameUnique(user)) {
         updateUserName();
       }
     }
@@ -213,23 +200,42 @@
   }
 
   function joinRoom(thisRoom) {
-    console.log(`client index => joinRoom() called to join ${thisRoom}`);
-    room = { name: thisRoom, numUsers: 0 };
+    console.log(
+      `client index => joinRoom() called to join ${thisRoom}, current rooms list `,
+      rooms
+    );
+    if (rooms.length) {
+      console.log(
+        `client index => joinRoom() called to join ${thisRoom}, rooms.length `,
+        rooms.length
+      );
+    }
+    let room = returnObjectByAttr(rooms, "name", thisRoom);
+    if (room == -1) {
+      room = { name: thisRoom, numUsers: 0 };
+    }
+    console.log(
+      `client index => joinRoom() called to join ${thisRoom}, the room obj `,
+      room
+    );
+
     socket.emit("join room", room, user);
     storeRoomName.set(thisRoom);
     storeChatUnderway.set(true);
     storeChatRooms.set(rooms);
   }
 
-  socket.on("rooms updated", serverRooms => {
-    rooms = serverRooms;
-    storeChatRooms.set(serverRooms);
+  socket.on("chatrooms changed", chatrooms => {
+    rooms = chatrooms;
+    storeChatRooms.set(chatrooms);
     console.log(
-      `client index => socket.on('rooms updated') now rooms array: `,
+      `client index => socket.on('chatrooms changed') now rooms array: `,
       rooms
     );
-    if(rooms.length > 0){
+    if (rooms.length > 0) {
       roomsExist = true;
+    } else {
+      roomsExist = false;
     }
   });
 
@@ -259,44 +265,40 @@
     e.target.select();
   }
 
-  function checkIsUserNameValid(str) {
+  function checkIsUserNameUnique(str) {
     if (usernames.indexOf(str) == -1) {
-      console.log(`checkIsUserNameValid returns true (unique) for ${str}`);
+      console.log(`checkIsUserNameUnique returns true (unique) for ${str}`);
       return true;
     } else {
-      console.log(`checkIsUserNameValid returns false (duplicate) for ${str}`);
+      console.log(`checkIsUserNameUnique returns false (duplicate) for ${str}`);
       return false;
     }
   }
   function onBlur(e) {
     user.length > 1 ? user : (user = generatedUsername);
-    if (checkIsUserNameValid(user)) {
+    if (checkIsUserNameUnique(user)) {
       updateUserName();
     }
-    console.log(
-      `onBlur e.target.value.length ${e.target.value.length} e.target.value ${e.target.value} generatedUsername ${generatedUsername}`
-    );
   }
 
   function onKeypress(e) {
     if (e.keyCode == 13) {
-      checkIsUserNameValid(user);
+      checkIsUserNameUnique(user);
     }
   }
 
   function updateUserName() {
-    socket.emit("update username", user);
     socket.username = user;
+    socket.emit("update username", user);
   }
 
-  function togglePicker(e) {
-    console.log(`toggle emoji picker e.target `, e.target);
-    let target = document.querySelector("form.frame");
-    emojiPicker.togglePicker(e.target);
-    emojiPicker.on("emoji", emoji => {
-      console.log(`returned emoji ${emoji}`);
-      emojiPicked = emoji;
-    });
+  function returnObjectByAttr(myArray, prop, val) {
+    for (var i = 0, length = myArray.length; i < length; i++) {
+      if (myArray[i][prop] == val) {
+        return myArray[i];
+      }
+    }
+    return -1;
   }
 </script>
 
@@ -540,7 +542,6 @@
 
         <div class="rooms-list">
           <h2 class="chatroom-heading">Join Chatroom</h2>
-          <span>roomsExist: {roomsExist}</span>
           <ul class="chatroom table-wrapper">
             <li class="chatroom-row table-heading">
               <div class="chatroom-name">Room Name</div>
