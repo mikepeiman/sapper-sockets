@@ -9,8 +9,8 @@
   import EmojiButton from "@joeattardi/emoji-button";
   import emojis from "emojis-list";
 
-	import { stores } from '@sapper/app';
-	const { preloading, page, session } = stores();
+  import { stores } from "@sapper/app";
+  const { preloading, page, session } = stores();
 
   // import Pickr from '@simonwep/pickr';
   // import '@simonwep/pickr/dist/themes/classic.min.css';
@@ -40,122 +40,76 @@
     usernames = [],
     room = {},
     rooms = [],
+    roomsExist = false,
     generatedRoomName,
     chatInitiated = false;
 
   $: user = "";
   $: roomName = "";
-  $: {
-    if (typeof window !== "undefined") {
-      rooms = JSON.parse(localStorage.getItem("ChatRooms"));
-    } else {
-      rooms = [];
-    }
-  }
-  $: bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
-  $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1}, ${color2})`;
-
-  $: {
-    if (typeof window !== "undefined") {
-      console.log(
-        `reactive window check on client, chat index, window location `,
-        window.location
-      );
-      window.addEventListener("beforeunload", e => {
-        console.log(
-          `Window about to unload, current client data is username ${user} color ${color1} emoji ${emojiPicked} usernames `,
-          usernames
-        );
-        // storeThisColor.set(color1);
-        // storeThisEmoji.set(emojiPicked);
-        // storeThisUser.set(user);
-        // storeUsernames.set(usernames);
-      });
-
-      document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
-      document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
-    }
-  }
 
   emojiPicked = "...";
   color1 = "rgba(255,25,255,0.35)";
-  color2 = "rgba(255,25,255,0.35)";
-
-  socket.on("rooms", data => {
-    rooms = data;
-    console.log(`socket.on rooms in client, populate rooms array`, rooms);
-  });
-
-  socket.on("rooms", data => {
-    rooms = data;
-    console.log(`socket.on rooms in client, populate rooms array`, rooms);
-  });
-
-  socket.on("usernames", users => {
-    usernames = users;
-    console.log(
-      `\nclient.username ${socket.username} receiving updated usernames: ${usernames}`
-    );
-  });
-
-  socket.on("users", users => {
-    // usernames = users;
-    console.log(
-      `client.username ${socket.username} receiving full list users objects`
-    );
-    console.dir(users, `\n`);
-  });
+  color2 = "rgba(25,255,255,0.35)";
+  gradientDegrees1 = 60;
+  gradientDegrees2 = 260;
+  $: bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
+  $: bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1}, ${color2})`;
 
   onMount(async () => {
-    console.log(
-      `onMount check on client, chat index, window location `,
-      window.location
-    );
-    console.log(`chat.index => onMount() session from Sapper stores: `, session)
-    // localStorage.debug = "false";
+    generateRandomColors();
     if (!initialized) {
-      let rand = getRandomInt(0, emojis.length);
-      let r1 = getRandomInt(0, 255);
-      let g1 = getRandomInt(0, 255);
-      let b1 = getRandomInt(0, 255);
-      color1 = `rgba(${r1}, ${g1},${b1},0.45)`;
-      let r2 = getRandomInt(0, 255);
-      let g2 = getRandomInt(0, 255);
-      let b2 = getRandomInt(0, 255);
-      color2 = `rgba(${r2}, ${g2},${b2},0.45)`;
-      gradientDegrees1 = getRandomInt(0, 360);
-      gradientDegrees2 = getRandomInt(0, -360);
-      console.log(
-        `random ${rand} emojis length ${emojis.length}: ${emojis[rand]}`
-      );
-      emojiPicked = await emojis[rand];
+      generateRandomEmoji();
       emojiPicker = new EmojiButton({ zIndex: 99 });
       user = generatedUsername = generate({ number: true }).dashed;
       roomName = generatedRoomName = generate({ number: false }).dashed;
       let chats = localStorage.getItem("ChatRooms");
-      if (chats.length) {
+      if (chats) {
         chats = JSON.parse(chats);
-        console.log(
-          `Chat init onMount() => we have ChatRooms array length true ${chats.length}`
-        );
-        chats.forEach(chatRoom => {
-          console.log(`each chatRoom as ${chatRoom.name}`);
-        });
+        if (chats.length) {
+          console.log(`chats exists in ls `, chats)
+          roomsExist = true;
+          console.log(
+            `Chat init onMount() => we have ChatRooms array length true ${chats.length}`
+          );
+          chats.forEach(chatRoom => {
+            console.log(`each chatRoom as ${chatRoom.name}`);
+          });
+        } else {
+          roomsExist = false;
+          rooms = [{ name: "No rooms currently active", numUsers: "" }];
+        }
       }
       console.log(
         `Chat onMount socket.id ${socket.id}, generated username ${generatedUsername}`
       );
       placeholderNameInit();
-      avatarInit();
     }
-
     document.documentElement.style.setProperty(`--custom-page-bg1`, bg1);
     document.documentElement.style.setProperty(`--custom-page-bg2`, bg2);
     let sapper = document.querySelector("#sapper");
     sapper.classList.toggle("transition");
-
     initialized = true;
   });
+
+  function generateRandomColors() {
+    let r1 = getRandomInt(0, 255);
+    let g1 = getRandomInt(0, 255);
+    let b1 = getRandomInt(0, 255);
+    color1 = `rgba(${r1}, ${g1},${b1},0.45)`;
+    let r2 = getRandomInt(0, 255);
+    let g2 = getRandomInt(0, 255);
+    let b2 = getRandomInt(0, 255);
+    color2 = `rgba(${r2}, ${g2},${b2},0.45)`;
+    gradientDegrees1 = getRandomInt(0, 360);
+    gradientDegrees2 = getRandomInt(0, -360);
+    bg1 = `linear-gradient(${gradientDegrees1}deg, ${color2}, ${color1})`;
+    bg2 = `linear-gradient(${gradientDegrees2}deg, ${color1}, ${color2})`;
+  }
+
+  async function generateRandomEmoji() {
+    let rand = getRandomInt(0, emojis.length);
+    emojiPicked = await emojis[rand];
+  }
 
   function colorPickerInit() {
     const pickr = Pickr.create({
@@ -262,32 +216,9 @@
     console.log(`client index => joinRoom() called to join ${thisRoom}`);
     room = { name: thisRoom, numUsers: 0 };
     socket.emit("join room", room, user);
-
     storeRoomName.set(thisRoom);
-    // socket.emit("chatroom initialized", roomName);
-    // window.location.href = `/chat/${roomName}`
     storeChatUnderway.set(true);
-    // rooms = [...rooms, room];
     storeChatRooms.set(rooms);
-    // window.location.href += `#${roomName}`;
-    // socket.emit(
-    //   "chat room loaded",
-    //   thisRoom,
-    //   { user: user, color: color1, emoji: emojiPicked },
-    //   userNameExists => {
-    //     if (!userNameExists) {
-    //       socket.username = user;
-    //       storeThisUser.set(user);
-    //       console.log(
-    //         `client receiving signal that this username ${user} is valid - and set to socket.username ${socket.username}`
-    //       );
-    //     } else {
-    //       console.log(
-    //         `client socket.username ${socket.username} receiving signal that this username ${user} is INVALID`
-    //       );
-    //     }
-    //   }
-    // );
   }
 
   socket.on("rooms updated", serverRooms => {
@@ -325,9 +256,6 @@
     }
   }
 
-  function avatarInit() {
-    socket.emit("avatar init", true);
-  }
 
   function onFocus(e) {
     e.target.select();
@@ -623,9 +551,14 @@
               <!-- <r-grid columns="8" class="chatroom-item"> -->
               <li class="chatroom-row">
                 <div span="1-6" class="chatroom-name">
-                  <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
-                    {room.name}
-                  </a>
+
+                  {#if roomsExist}
+                    <a href="/chat/{room.name}" on:click={joinRoom(room.name)}>
+                      {room.name}
+                    </a>
+                  {:else}
+                    <a href="/chat">There are no chat rooms currently active</a>
+                  {/if}
                 </div>
                 <div span="7-8" class="chatroom-numusers">{room.numUsers}</div>
               </li>
