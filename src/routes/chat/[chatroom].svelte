@@ -14,6 +14,7 @@
   let initialized = false;
   import {
     storeUsernames,
+    storeChatRooms,
     storeThisUser,
     storeThisColor,
     storeThisEmoji,
@@ -39,7 +40,7 @@
     gradientDegrees2,
     usernames = [],
     rooms = [],
-    room = '',
+    room = "",
     generatedRoomName,
     chatInitiated = false;
 
@@ -64,7 +65,7 @@
   });
 
   socket.on("typing", username => {
-    console.log(`receiving a typing emission... logged from about.svelte`);
+    console.log(`receiving a typing emission... logged from [chatroom].svelte`);
     let feedback = document.querySelector("#feedback");
     feedback.innerHTML = `<p class="feedback">${username} is typing...</p>`;
   });
@@ -85,12 +86,13 @@
   });
 
   onMount(async () => {
-    generateRandomColors()
-    generateRandomEmoji()
+    generateRandomColors();
+    generateRandomEmoji();
     let url = window.location.href;
-    let str = url.split('chat/')
-    roomName = str[1]
-    socket.emit('joined room', user, roomName)
+    let str = url.split("chat/");
+    roomName = str[1];
+    joinRoom(roomName)
+    socket.emit("joined room", user, roomName);
     localStorage.debug = "false";
     if (!initialized) {
       emojiPicker = new EmojiButton({ zIndex: 99 });
@@ -115,11 +117,47 @@
   });
 
   onDestroy(() => {
-    console.log(`chatroom ${roomName} called onDestroy(), user ${user} left`)
-        socket.emit("left chatroom", roomName, user);
-  })
+    console.log(`chatroom ${roomName} called onDestroy(), user ${user} left`);
+    socket.emit("left chatroom", roomName, user);
+  });
+  function returnObjectByAttr(myArray, prop, val) {
+    for (var i = 0, length = myArray.length; i < length; i++) {
+      if (myArray[i][prop] == val) {
+        return myArray[i];
+      }
+    }
+    return -1;
+  }
+  function joinRoom(thisRoom) {
+    console.log(
+      `client index => joinRoom() called to join ${thisRoom}, current rooms list `,
+      rooms
+    );
+    if (rooms.length) {
+      console.log(
+        `client index => joinRoom() called to join ${thisRoom}, rooms.length `,
+        rooms.length
+      );
+    }
+    let room = returnObjectByAttr(rooms, "name", thisRoom);
+    if (room == -1) {
+      room = { name: thisRoom, numUsers: 0 };
+      console.log(
+        `client index => joinRoom() called to join ${thisRoom}, no room of this name exists `
+      );
+    }
+    console.log(
+      `client index => joinRoom() called to join ${thisRoom}, the room obj `,
+      room
+    );
 
-    function generateRandomColors() {
+    socket.emit("join room", room, user);
+    storeRoomName.set(thisRoom);
+    storeChatUnderway.set(true);
+    storeChatRooms.set(rooms);
+  }
+
+  function generateRandomColors() {
     let r1 = getRandomInt(0, 255);
     let g1 = getRandomInt(0, 255);
     let b1 = getRandomInt(0, 255);
@@ -223,26 +261,26 @@
       let thisMsg = {
         username: user,
         body: currentMessage,
-        room: $storeRoomName
+        room: roomName
       };
       messages = [...messages, thisMsg];
       socket.emit("chat message", thisMsg);
     }
     if (user !== socket.username) {
       console.log(
-        `submitMsg function inside about.svelte ${socket.username} does not equal current username ${user} (no message: ${currentMessage})`
+        `submitMsg function inside [chatroom].svelte ${socket.username} does not equal current username ${user} (no message: ${currentMessage})`
       );
       if (checkIsUserNameValid(user)) {
         updateUserName();
       }
     }
     console.log(
-      `submitMsg function inside about.svelte ${socket.id} ||| ${user}::: ${currentMessage}`
+      `submitMsg function inside [chatroom].svelte ${socket.id} ||| ${user}::: ${currentMessage}`
     );
   }
 
   function typing() {
-    socket.emit("typing", user, $storeRoomName);
+    socket.emit("typing", user, roomName);
   }
 
   function placeholderNameInit() {

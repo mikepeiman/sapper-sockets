@@ -9,7 +9,7 @@ import {
   storeThisEmoji,
   storeChatRooms,
   storeRoomName,
-  storeChatUnderway
+  storeChatUnderway,
 } from "./stores.js";
 const cookieParser = require("cookie-parser");
 const NetworkAvatarPicker = require("network-avatar-picker");
@@ -21,7 +21,7 @@ const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === "development";
 const server = http.createServer();
 const app = polka({ server });
-app.listen(PORT, err => {
+app.listen(PORT, (err) => {
   console.log(`server listening on port ${PORT}`);
   if (err) console.log("error", err);
 });
@@ -40,7 +40,7 @@ let room = "";
 let i = 0;
 let previousClient = false;
 
-storeChatRooms.subscribe(val => {
+storeChatRooms.subscribe((val) => {
   console.log(`server.js => storeChatRooms.subscribed, value: `, val);
 });
 
@@ -73,7 +73,7 @@ function returnObjectByAttr(myArray, prop, val) {
 // using this great, succinct tutorial to learn socket.io:
 // https://www.youtube.com/watch?v=KNqVpESuyQo&list=PL4cUxeGkcC9i4V-_ZVwLmOusj8YAUhj_9&index=4
 
-io.sockets.on("connection", socket => {
+io.on("connection", (socket) => {
   io.clients((error, clients) => {
     if (error) throw error;
     console.log(
@@ -83,7 +83,7 @@ io.sockets.on("connection", socket => {
   socket.emit("chatrooms changed", rooms);
   socket.broadcast.emit("chatrooms changed", rooms);
 
-  socket.on("joinRoom", room => {
+  socket.on("joinRoom", (room) => {
     console.log(`socket.on joinRoom => count i ${i} room ${room}`, room);
     rooms = [...rooms, room];
     socket.join(room.name);
@@ -94,42 +94,42 @@ io.sockets.on("connection", socket => {
   let cookie = socket.handshake.headers.cookie;
   cookie = cookie.slice(cookie.indexOf("=") + 1);
   // socket.join('chatlobby')
-  console.log(`serverSockets: made socket connection ${i}: `, socket.id);
+  // console.log(`serverSockets: made socket connection ${i}: `, socket.id);
 
-  let el = users.find(user => user.socket === cookie) || "not found";
+  let el = users.find((user) => user.socket === cookie) || "not found";
   // let match = users.find(x => x.id === socket.id).id === socket.id
-  console.log(
-    `\nis there a cookie ${cookie} match with a previous socket.id? client name ${
-      el.name ? el.name : el
-    }`
-  );
+  // console.log(
+  //   `\nis there a cookie ${cookie} match with a previous socket.id? client name ${
+  //     el.name ? el.name : el
+  //   }`
+  // );
   console.dir(el, `\n\n`);
 
   // var cookies = cookieParser(socket.handshake.headers.cookie);
-  console.log(`socket.handshake.headers.cookie ${cookie}`);
-  socket.on("room name", room => {
-    // if (rooms.includes(room)) {
-    console.log(`server.js => socket.on("room name"), room ${room} `, room);
-    if (rooms.some(r => r.name === room.name)) {
-      console.log(`${room.name} chatroom already exists`);
-      room.numUsers++;
-      let idx = findIndexByAttr(rooms, "name", room.name);
-      console.log(
-        `${room.name} has numUsers ${room.numUsers} at index ${idx} as in array ${rooms[idx]}`,
-        idx,
-        rooms[idx]
-      );
-      rooms[idx] = room;
-      rooms = rooms;
-      socket.emit("chatrooms changed", rooms);
-      socket.broadcast.emit("chatrooms changed", rooms);
-    } else {
-      console.log(`${room.name} chatroom does not yet exist`);
-      rooms = [...rooms, room];
-      socket.emit("chatrooms changed", rooms);
-      socket.broadcast.emit("chatrooms changed", rooms);
-    }
-  });
+  // console.log(`socket.handshake.headers.cookie ${cookie}`);
+  // socket.on("room name", room => {
+  //   // if (rooms.includes(room)) {
+  //   // console.log(`server.js => socket.on("room name"), room ${room} `, room);
+  //   if (rooms.some(r => r.name === room.name)) {
+  //     console.log(`${room.name} chatroom already exists`);
+  //     room.numUsers++;
+  //     let idx = findIndexByAttr(rooms, "name", room.name);
+  //     console.log(
+  //       `${room.name} has numUsers ${room.numUsers} at index ${idx} as in array ${rooms[idx]}`,
+  //       idx,
+  //       rooms[idx]
+  //     );
+  //     rooms[idx] = room;
+  //     rooms = rooms;
+  //     socket.emit("chatrooms changed", rooms);
+  //     socket.broadcast.emit("chatrooms changed", rooms);
+  //   } else {
+  //     console.log(`${room.name} chatroom does not yet exist`);
+  //     rooms = [...rooms, room];
+  //     socket.emit("chatrooms changed", rooms);
+  //     socket.broadcast.emit("chatrooms changed", rooms);
+  //   }
+  // });
 
   socket.on("join room", (room, user) => {
     console.log(
@@ -137,12 +137,17 @@ io.sockets.on("connection", socket => {
     );
     updateRooms(room, user, "join");
   });
+  function updateUsers(users, user, operation) {
+    console.log(`updateUsers called`);
+  }
+
+  // updateUsers(users, user, operation)
 
   function updateRooms(room, user, operation) {
     console.log(`server => updateRooms() ${room.name} from user ${user}`);
     if (typeof room.name !== "undefined") {
       if (operation === "join") {
-        console.log(`server => updateRooms("join")`);
+        console.log(`server => updateRooms("join") user ${user} into ${room.name}`);
         // find room in rooms array
         let idx = findIndexByAttr(rooms, "name", room.name);
         console.log(
@@ -194,7 +199,8 @@ io.sockets.on("connection", socket => {
           console.log(
             `the room ${room.name}.numUsers was less than 1, so we will delete it`
           );
-          delete rooms[idx];
+          // delete rooms[idx];
+          rooms = rooms.splice(idx, 1);
           console.log(
             `the room.numUsers was less than 1, so we will delete it, will console.dir rooms`,
             room
@@ -206,8 +212,8 @@ io.sockets.on("connection", socket => {
           rooms = rooms;
         }
         // let room = returnObjectByAttr(rooms, "name", roomName)
-        if (typeof rooms[0] === "undefined") {
-          rooms = [];
+        if (typeof rooms[idx] === "undefined") {
+          rooms = rooms.splice(idx, 1);
         }
       } else if (operation === "update") {
         console.log(`server => updateRooms("update")`);
@@ -254,8 +260,8 @@ io.sockets.on("connection", socket => {
             id: i,
             name: name,
             socket: socket.id,
-            cookie: cookie
-          }
+            cookie: cookie,
+          },
         ];
         socket.broadcast.emit("usernames", usernames);
         socket.emit("usernames", usernames);
@@ -286,7 +292,7 @@ io.sockets.on("connection", socket => {
     socket.broadcast.emit("chatrooms changed", rooms);
   });
 
-  socket.on("update username", name => {
+  socket.on("update username", (name) => {
     console.log(
       `server asked to update username with ${name}, names: `,
       usernames
@@ -294,7 +300,7 @@ io.sockets.on("connection", socket => {
     usernames.splice(usernames.indexOf(socket.username), 1);
     usernames = [...usernames, name];
     socket.username = name;
-    socket.broadcast.emit("usernames", usernames);
+    // socket.broadcast.emit("usernames", usernames);
     socket.emit("usernames", usernames);
     console.log(
       `server asked to update username AFTER: with ${name}, names: `,
@@ -306,34 +312,35 @@ io.sockets.on("connection", socket => {
     console.log(`server.js => on.'typing', user: ${user} room: `, room);
     if (room) {
       console.log(`on"typing" yes we have a room ${room}`);
-      // io.sockets.in('/'+room).emit("typing", user);
-      io.to(room).emit("typing", user);
+      // socket.broadcast.emit("typing", user);
+      socket.to(`${room}`).emit("typing", user);
+      socket.to(room).emit("typing", user);
     } else {
       console.log(`on"typing" no we have no room ${room}`);
       socket.broadcast.emit("typing", user);
     }
   });
 
-  socket.on("chat message", message => {
+  socket.on("chat message", (message) => {
     console.log(
       `server.js => on.'message', message: ${message.body} user: ${message.username} room: ${message.room} `,
       room
     );
     if (message.room) {
       console.log(`on"message" yes we have a room ${room}`);
-      io.to(room).emit("broadcast message", message);
-      // io.sockets.in('/'+room).emit("broadcast message", message);
+      socket.to(room).emit("broadcast message", message);
+      io.sockets.in("/" + room).emit("broadcast message", message);
     } else {
       console.log(`on"message" no we have no room ${room}`);
-      socket.broadcast.emit("broadcast message", message);
+      socket.emit("broadcast message", message);
     }
   });
 
-  socket.on("disconnected", data => {
+  socket.on("disconnected", (data) => {
     console.log(`server.js => client disconnected from chatroom ${room}`);
   });
 
-  socket.on("disconnect", reason => {
+  socket.on("disconnect", (reason) => {
     console.log(
       `received a server-side socket disconnect, reason given: `,
       reason
@@ -350,7 +357,7 @@ io.sockets.on("connection", socket => {
         `\ndisconnecting socket.username ${socket.username} with cookie ${cookie} and socket.id ${socket.id}\n`
       );
       let pos = users
-        .map(function(e) {
+        .map(function (e) {
           return e.socket;
         })
         .indexOf(socket.id);

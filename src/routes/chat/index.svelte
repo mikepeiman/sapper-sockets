@@ -213,6 +213,9 @@
     let room = returnObjectByAttr(rooms, "name", thisRoom);
     if (room == -1) {
       room = { name: thisRoom, numUsers: 0 };
+      console.log(
+        `client index => joinRoom() called to join ${thisRoom}, no room of this name exists `
+      );
     }
     console.log(
       `client index => joinRoom() called to join ${thisRoom}, the room obj `,
@@ -232,6 +235,9 @@
       `client index => socket.on('chatrooms changed') now rooms array: `,
       rooms
     );
+    rooms.forEach(room => {
+      console.log(`room from rooms.forEach: ${typeof room},`, room);
+    });
     if (rooms.length > 0) {
       roomsExist = true;
     } else {
